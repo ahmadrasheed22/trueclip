@@ -15,9 +15,6 @@ export default function Navbar({ syneFont }: NavbarProps) {
 
         <nav className="navbar-links" aria-label="Primary">
           <Link href="/">Home</Link>
-          <a href="https://github.com" target="_blank" rel="noreferrer noopener">
-            GitHub
-          </a>
         </nav>
       </div>
     </header>

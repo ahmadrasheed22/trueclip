@@ -1,7 +1,8 @@
 'use client';
 
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, use, useCallback, useEffect, useRef, useState } from "react";
 import VideoCard, { VideoItem, formatCount } from "@/components/VideoCard";
 import VideoModal from "@/components/VideoModal";
 
@@ -18,6 +19,10 @@ type ChannelInfo = {
 type ShortsResponse = {
   videos: VideoItem[];
   nextPageToken: string | null;
+};
+
+type HomePageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -147,7 +152,20 @@ function normalizeShortsResponse(payload: unknown): ShortsResponse {
   };
 }
 
-export default function HomePage() {
+export default function HomePage({ searchParams }: HomePageProps) {
+  const router = useRouter();
+  const resolvedSearchParams = use(searchParams);
+  const queryParamValue = resolvedSearchParams.q;
+  const queryFromUrl =
+    typeof queryParamValue === "string"
+      ? queryParamValue
+      : Array.isArray(queryParamValue)
+        ? queryParamValue[0] ?? ""
+        : "";
+  const normalizedUrlQuery = queryFromUrl.trim();
+  const hasUrlQuery = normalizedUrlQuery.length > 0;
+  const lastLoadedQueryRef = useRef("");
+
   const [query, setQuery] = useState("");
   const [channel, setChannel] = useState<ChannelInfo | null>(null);
   const [shorts, setShorts] = useState<VideoItem[]>([]);
@@ -160,96 +178,142 @@ export default function HomePage() {
   const [hasRequestedShorts, setHasRequestedShorts] = useState(false);
   const [modalVideo, setModalVideo] = useState<{ videoId: string; title: string } | null>(null);
 
-  const resetToHero = () => {
+  const showHero = !channel && (!hasUrlQuery || Boolean(searchError));
+  const showUrlLoading = !channel && hasUrlQuery && !searchError;
+
+  const resetToHero = useCallback(() => {
+    setQuery("");
     setChannel(null);
     setShorts([]);
     setNextPageToken(null);
     setSearchError("");
     setShortsError("");
+    setIsSearching(false);
+    setIsLoadingShorts(false);
+    setIsLoadingMore(false);
     setHasRequestedShorts(false);
-  };
+    setModalVideo(null);
+  }, []);
 
-  const handleSearch = async (event: FormEvent<HTMLFormElement>) => {
+  const fetchShorts = useCallback(
+    async (pageToken?: string, channelId?: string) => {
+      const id = channelId ?? channel?.id;
+      if (!id) return;
+
+      setHasRequestedShorts(true);
+      if (pageToken) {
+        setIsLoadingMore(true);
+      } else {
+        setIsLoadingShorts(true);
+      }
+
+      if (!pageToken) {
+        setShortsError("");
+      }
+
+      try {
+        const params = new URLSearchParams({ channelId: id });
+        if (pageToken) params.set("pageToken", pageToken);
+
+        const response = await fetch(`/api/shorts?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error("Shorts fetch failed");
+        }
+
+        const payload = await response.json();
+        const normalized = normalizeShortsResponse(payload);
+
+        setShorts((prev) =>
+          pageToken ? [...prev, ...normalized.videos] : normalized.videos
+        );
+        setNextPageToken(normalized.nextPageToken);
+      } catch {
+        setShortsError("Unable to load shorts right now. Please try again.");
+      } finally {
+        setIsLoadingShorts(false);
+        setIsLoadingMore(false);
+      }
+    },
+    [channel?.id]
+  );
+
+  const loadChannelByQuery = useCallback(
+    async (searchValue: string) => {
+      setIsSearching(true);
+      setSearchError("");
+      setShortsError("");
+      setShorts([]);
+      setNextPageToken(null);
+      setHasRequestedShorts(false);
+
+      try {
+        const response = await fetch(`/api/channel?q=${encodeURIComponent(searchValue)}`);
+        if (!response.ok) {
+          throw new Error("Channel fetch failed");
+        }
+
+        const payload = await response.json();
+        const normalized = normalizeChannelResponse(payload);
+
+        if (!normalized) {
+          throw new Error("No channel data returned");
+        }
+
+        setChannel(normalized);
+        await fetchShorts(undefined, normalized.id);
+      } catch {
+        setChannel(null);
+        setSearchError(
+          "Unable to find that channel. Try a channel name, @handle, or URL."
+        );
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [fetchShorts]
+  );
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const searchValue = query.trim();
 
     if (!searchValue) return;
 
-    setIsSearching(true);
-    setSearchError("");
-    setShortsError("");
-    setShorts([]);
-    setNextPageToken(null);
-    setHasRequestedShorts(false);
-
-    try {
-      const response = await fetch(`/api/channel?q=${encodeURIComponent(searchValue)}`);
-      if (!response.ok) {
-        throw new Error("Channel fetch failed");
-      }
-
-      const payload = await response.json();
-      const normalized = normalizeChannelResponse(payload);
-
-      if (!normalized) {
-        throw new Error("No channel data returned");
-      }
-
-      setChannel(normalized);
-      await fetchShorts(undefined, normalized.id);
-    } catch {
-      setChannel(null);
-      setSearchError(
-        "Unable to find that channel. Try a channel name, @handle, or URL."
-      );
-    } finally {
-      setIsSearching(false);
+    if (searchValue === normalizedUrlQuery) {
+      lastLoadedQueryRef.current = searchValue;
+      void loadChannelByQuery(searchValue);
+      return;
     }
+
+    router.push(`/?q=${encodeURIComponent(searchValue)}`);
   };
 
-  const fetchShorts = async (pageToken?: string, channelId?: string) => {
-    const id = channelId ?? channel?.id;
-    if (!id) return;
-
-    setHasRequestedShorts(true);
-    if (pageToken) {
-      setIsLoadingMore(true);
-    } else {
-      setIsLoadingShorts(true);
-    }
-
-    if (!pageToken) {
-      setShortsError("");
-    }
-
-    try {
-      const params = new URLSearchParams({ channelId: id });
-      if (pageToken) params.set("pageToken", pageToken);
-
-      const response = await fetch(`/api/shorts?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error("Shorts fetch failed");
-      }
-
-      const payload = await response.json();
-      const normalized = normalizeShortsResponse(payload);
-
-      setShorts((prev) =>
-        pageToken ? [...prev, ...normalized.videos] : normalized.videos
-      );
-      setNextPageToken(normalized.nextPageToken);
-    } catch {
-      setShortsError("Unable to load shorts right now. Please try again.");
-    } finally {
-      setIsLoadingShorts(false);
-      setIsLoadingMore(false);
-    }
+  const handleBackToSearch = () => {
+    lastLoadedQueryRef.current = "";
+    router.push("/");
   };
+
+  useEffect(() => {
+    setQuery((prev) => (prev === normalizedUrlQuery ? prev : normalizedUrlQuery));
+
+    if (!normalizedUrlQuery) {
+      lastLoadedQueryRef.current = "";
+      resetToHero();
+      return;
+    }
+
+    if (lastLoadedQueryRef.current === normalizedUrlQuery) {
+      return;
+    }
+
+    lastLoadedQueryRef.current = normalizedUrlQuery;
+    void loadChannelByQuery(normalizedUrlQuery);
+  }, [loadChannelByQuery, normalizedUrlQuery, resetToHero]);
 
   return (
     <main className="page-root">
       <div className="page-container">
-        {!channel ? (
+        {showHero ? (
           <section className="hero-section">
             <p className="hero-eyebrow">YouTube Shorts Tracker</p>
 
@@ -301,9 +365,13 @@ export default function HomePage() {
 
             {searchError ? <p className="inline-error">{searchError}</p> : null}
           </section>
-        ) : (
+        ) : showUrlLoading ? (
           <section className="channel-view">
-            <button type="button" className="back-link" onClick={resetToHero}>
+            <p className="info-text">Loading current channel...</p>
+          </section>
+        ) : channel ? (
+          <section className="channel-view">
+            <button type="button" className="back-link" onClick={handleBackToSearch}>
               {"\u2190 Back to search"}
             </button>
 
@@ -383,7 +451,7 @@ export default function HomePage() {
               </section>
             ) : null}
           </section>
-        )}
+        ) : null}
       </div>
 
       {modalVideo && (
