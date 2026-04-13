@@ -64,6 +64,7 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     likes: String(video.likeCount ?? "0"),
     publishedAt: video.publishedAt ?? "",
   });
+  const [publishedAgoLabel, setPublishedAgoLabel] = useState("Updating...");
 
   const thumbnail = video.thumbnail || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
 
@@ -105,6 +106,20 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
       window.clearInterval(intervalId);
     };
   }, [videoId]);
+
+  useEffect(() => {
+    const updateLabel = () => {
+      setPublishedAgoLabel(timeAgo(stats.publishedAt));
+    };
+
+    // Compute relative time on the client after hydration to avoid SSR/client drift.
+    updateLabel();
+
+    const intervalId = window.setInterval(updateLabel, 60000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [stats.publishedAt]);
 
   const handleDownload = async () => {
     if (downloadState === "loading") return;
@@ -215,7 +230,7 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
 
         <div style={{ marginTop: "4px" }}>
           <span style={{ fontSize: "11px", color: "var(--text-3)" }}>
-            {"\u{1F550}"} {timeAgo(stats.publishedAt)}
+            {"\u{1F550}"} {publishedAgoLabel}
           </span>
         </div>
 

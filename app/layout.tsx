@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`${dmSans.className} ${dmSans.variable} ${syne.variable}`}>
         <Navbar syneFont={syne.className} />
         {children}
