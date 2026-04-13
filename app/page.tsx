@@ -194,6 +194,7 @@ export default function HomePage() {
       }
 
       setChannel(normalized);
+      await fetchShorts(undefined, normalized.id);
     } catch {
       setChannel(null);
       setSearchError(
@@ -204,8 +205,9 @@ export default function HomePage() {
     }
   };
 
-  const fetchShorts = async (pageToken?: string) => {
-    if (!channel?.id) return;
+  const fetchShorts = async (pageToken?: string, channelId?: string) => {
+    const id = channelId ?? channel?.id;
+    if (!id) return;
 
     setHasRequestedShorts(true);
     if (pageToken) {
@@ -219,7 +221,7 @@ export default function HomePage() {
     }
 
     try {
-      const params = new URLSearchParams({ channelId: channel.id });
+      const params = new URLSearchParams({ channelId: id });
       if (pageToken) params.set("pageToken", pageToken);
 
       const response = await fetch(`/api/shorts?${params.toString()}`);
@@ -333,14 +335,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="load-shorts-btn"
-                onClick={() => fetchShorts()}
-                disabled={isLoadingShorts}
-              >
-                {isLoadingShorts ? "Loading..." : "Load Shorts \u2193"}
-              </button>
+
             </div>
 
             <hr className="section-divider" />
