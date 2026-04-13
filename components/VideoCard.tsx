@@ -41,17 +41,29 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
 
   const thumbnail = video.thumbnail || `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`;
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (downloadState === "loading") return;
 
+    setDownloadState("loading");
+
     try {
-      setDownloadState("loading");
+      const response = await fetch(
+        `/api/download?videoId=${video.videoId}&title=${encodeURIComponent(video.title)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = `/api/download?videoId=${encodeURIComponent(video.videoId)}&title=${encodeURIComponent(video.title)}`;
-      a.download = `${video.title}.mp4`;
+      a.href = url;
+      a.download = `${video.title || video.videoId}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
       setDownloadState("success");
     } catch {
       setDownloadState("error");
