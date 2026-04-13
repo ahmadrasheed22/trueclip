@@ -59,6 +59,7 @@ export function timeAgo(dateString: string | undefined | null) {
 export default function VideoCard({ video, onPlay }: VideoCardProps) {
   const videoId = video.videoId;
   const [downloadState, setDownloadState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [postState, setPostState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [stats, setStats] = useState({
     views: String(video.viewCount ?? "0"),
     likes: String(video.likeCount ?? "0"),
@@ -152,6 +153,51 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     }
   };
 
+  const handlePostToTikTok = async () => {
+    if (postState === "loading") return;
+
+    setPostState("loading");
+
+    try {
+      const origin = window.location.origin;
+      if (!origin.startsWith("https://")) {
+        throw new Error("TikTok posting requires HTTPS.");
+      }
+
+      const videoUrl = `${origin}/api/download?videoId=${video.videoId}&title=${encodeURIComponent(video.title)}`;
+
+      const response = await fetch("/api/tiktok/post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          videoUrl,
+          captionSeed: video.title,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { success?: boolean; error?: string }
+        | null;
+
+      if (response.status === 401) {
+        window.location.href = "/api/tiktok/login";
+        return;
+      }
+
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.error || "TikTok post failed.");
+      }
+
+      setPostState("success");
+    } catch {
+      setPostState("error");
+    } finally {
+      window.setTimeout(() => setPostState("idle"), 2400);
+    }
+  };
+
   let buttonText = "\u2193 Download MP4";
   if (downloadState === "loading") buttonText = "Downloading...";
   if (downloadState === "success") buttonText = "\u2713 Saved!";
@@ -161,6 +207,19 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     "download-btn",
     downloadState === "success" ? "success" : "",
     downloadState === "error" ? "error" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  let postButtonText = "Post to TikTok";
+  if (postState === "loading") postButtonText = "Posting to TikTok...";
+  if (postState === "success") postButtonText = "\u2713 Posted";
+  if (postState === "error") postButtonText = "\u2717 Failed";
+
+  const postButtonClassName = [
+    "tiktok-post-btn",
+    postState === "success" ? "success" : "",
+    postState === "error" ? "error" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -236,6 +295,15 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
 
         <button type="button" className={buttonClassName} onClick={handleDownload} disabled={downloadState === "loading"}>
           {buttonText}
+        </button>
+
+        <button
+          type="button"
+          className={postButtonClassName}
+          onClick={handlePostToTikTok}
+          disabled={postState === "loading"}
+        >
+          {postButtonText}
         </button>
       </div>
     </article>

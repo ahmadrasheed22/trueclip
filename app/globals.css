@@ -884,7 +884,7 @@ a {
 }
 
 .video-body {
-  padding: 12px 14px 14px;
+  padding: 14px 14px 16px;
 }
 
 .video-title {
@@ -942,6 +942,43 @@ a {
 .download-btn.error {
   border-color: var(--red);
   color: var(--red);
+}
+
+.tiktok-post-btn {
+  margin-top: 10px;
+  width: 100%;
+  border: 1px solid #1f1f1f;
+  border-radius: var(--radius-sm);
+  background: #101010;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tiktok-post-btn:hover:not(:disabled) {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.tiktok-post-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.tiktok-post-btn.success {
+  border-color: #2f9e44;
+  background: #2f9e44;
+  color: #ffffff;
+}
+
+.tiktok-post-btn.error {
+  border-color: var(--red);
+  color: var(--red);
+  background: transparent;
 }
 
 .tiktok-panel {
