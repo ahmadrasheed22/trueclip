@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FormEvent, use, useCallback, useEffect, useRef, useState } from "react";
+import LiveMonitor from "@/components/LiveMonitor";
 import VideoCard, { VideoItem, formatCount } from "@/components/VideoCard";
 import VideoModal from "@/components/VideoModal";
 
@@ -24,6 +25,8 @@ type ShortsResponse = {
 type HomePageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
+
+type LiveStatus = "idle" | "connecting" | "live" | "reconnecting" | "error";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object") return null;
@@ -167,7 +170,6 @@ export default function HomePage({ searchParams }: HomePageProps) {
   const normalizedUrlQuery = queryFromUrl.trim();
   const hasUrlQuery = normalizedUrlQuery.length > 0;
   const lastLoadedQueryRef = useRef("");
-  const shortsRef = useRef<VideoItem[]>([]);
 
   const [query, setQuery] = useState("");
   const [channel, setChannel] = useState<ChannelInfo | null>(null);
@@ -179,15 +181,12 @@ export default function HomePage({ searchParams }: HomePageProps) {
   const [isLoadingShorts, setIsLoadingShorts] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasRequestedShorts, setHasRequestedShorts] = useState(false);
-  const [newShortsCount, setNewShortsCount] = useState(0);
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>("idle");
+  const [newShortsQueue, setNewShortsQueue] = useState<VideoItem[]>([]);
   const [modalVideo, setModalVideo] = useState<{ videoId: string; title: string } | null>(null);
 
   const showHero = !channel && (!hasUrlQuery || Boolean(searchError));
   const showUrlLoading = !channel && hasUrlQuery && !searchError;
-
-  useEffect(() => {
-    shortsRef.current = shorts;
-  }, [shorts]);
 
   const resetToHero = useCallback(() => {
     setQuery("");
@@ -200,7 +199,8 @@ export default function HomePage({ searchParams }: HomePageProps) {
     setIsLoadingShorts(false);
     setIsLoadingMore(false);
     setHasRequestedShorts(false);
-    setNewShortsCount(0);
+    setLiveStatus("idle");
+    setNewShortsQueue([]);
     setModalVideo(null);
   }, []);
 
@@ -254,7 +254,8 @@ export default function HomePage({ searchParams }: HomePageProps) {
       setShorts([]);
       setNextPageToken(null);
       setHasRequestedShorts(false);
-      setNewShortsCount(0);
+      setLiveStatus("idle");
+      setNewShortsQueue([]);
 
       try {
         const response = await fetch(`/api/channel?q=${encodeURIComponent(searchValue)}`);
@@ -282,6 +283,23 @@ export default function HomePage({ searchParams }: HomePageProps) {
     },
     [fetchShorts]
   );
+
+  const handleIncomingShort = useCallback((video: unknown) => {
+    const normalized = normalizeShortItem(video);
+    if (!normalized) return;
+
+    setShorts((prev) => {
+      const exists = prev.some((item) => item.videoId === normalized.videoId);
+      if (exists) return prev;
+      return [normalized, ...prev];
+    });
+
+    setNewShortsQueue((prev) => [...prev, normalized]);
+
+    window.setTimeout(() => {
+      setNewShortsQueue((prev) => prev.slice(1));
+    }, 5000);
+  }, []);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -320,64 +338,33 @@ export default function HomePage({ searchParams }: HomePageProps) {
     void loadChannelByQuery(normalizedUrlQuery);
   }, [loadChannelByQuery, normalizedUrlQuery, resetToHero]);
 
-  useEffect(() => {
-    const channelId = channel?.id;
-    if (!channelId) return;
-
-    const refreshLatestShorts = async () => {
-      try {
-        const params = new URLSearchParams({ channelId });
-        const response = await fetch(`/api/shorts?${params.toString()}`);
-        if (!response.ok) return;
-
-        const payload = await response.json();
-        const normalized = normalizeShortsResponse(payload);
-
-        if (normalized.videos.length === 0) return;
-
-        const existingIds = new Set(shortsRef.current.map((video) => video.videoId));
-        const newItems = normalized.videos.filter((video) => !existingIds.has(video.videoId));
-
-        if (newItems.length > 0) {
-          setShorts((prev) => [...newItems, ...prev]);
-          setNewShortsCount((prev) => prev + newItems.length);
-        }
-      } catch {
-        // Keep this refresh silent and retry on the next interval tick.
-      }
-    };
-
-    const intervalId = window.setInterval(() => {
-      void refreshLatestShorts();
-    }, 300000);
-
-    return () => window.clearInterval(intervalId);
-  }, [channel?.id]);
-
   return (
     <main className="page-root">
-      {newShortsCount > 0 ? (
-        <button
-          type="button"
+      {newShortsQueue.length > 0 ? (
+        <div
           style={{
             position: "fixed",
             top: "80px",
             left: "50%",
             transform: "translateX(-50%)",
-            background: "var(--accent)",
+            background: "#22c55e",
             color: "white",
-            padding: "10px 24px",
+            padding: "12px 24px",
             borderRadius: "99px",
             fontSize: "14px",
             fontWeight: "600",
             zIndex: 999,
-            cursor: "pointer",
-            border: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 4px 20px rgba(34,197,94,0.4)",
+            animation: "slideDown 0.3s ease",
           }}
-          onClick={() => setNewShortsCount(0)}
         >
-          {"\u2191"} {newShortsCount} new Shorts available - click to refresh
-        </button>
+          {`\u{1F3AC} New Short just uploaded - "${
+            (newShortsQueue[0]?.title ?? "Untitled Short").substring(0, 40)
+          }..."`}
+        </div>
       ) : null}
 
       <div className="page-container">
@@ -476,13 +463,58 @@ export default function HomePage({ searchParams }: HomePageProps) {
 
             </div>
 
+            <LiveMonitor
+              channelId={channel.id}
+              onNewShort={handleIncomingShort}
+              onStatusChange={setLiveStatus}
+            />
+
             <hr className="section-divider" />
 
             {hasRequestedShorts ? (
               <section className="shorts-section">
-                <h2 className="shorts-title">
-                  Shorts {"\u2014"} {shorts.length} videos
-                </h2>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    margin: "36px 0 20px",
+                  }}
+                >
+                  <h2 style={{ fontSize: "18px", fontWeight: "700" }}>
+                    Shorts {"\u2014"} {shorts.length} videos
+                  </h2>
+
+                  {liveStatus === "live" ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div
+                        style={{
+                          width: "8px",
+                          height: "8px",
+                          borderRadius: "50%",
+                          background: "#22c55e",
+                          boxShadow: "0 0 6px #22c55e",
+                          animation: "pulse 1.5s infinite",
+                        }}
+                      />
+                      <span style={{ fontSize: "12px", color: "#22c55e", fontWeight: "600" }}>
+                        LIVE
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {liveStatus === "connecting" ? (
+                    <span style={{ fontSize: "12px", color: "var(--text-3)" }}>
+                      Connecting...
+                    </span>
+                  ) : null}
+
+                  {liveStatus === "reconnecting" ? (
+                    <span style={{ fontSize: "12px", color: "#f59e0b" }}>
+                      Reconnecting...
+                    </span>
+                  ) : null}
+                </div>
 
                 {shortsError ? <p className="error-text">{shortsError}</p> : null}
 
