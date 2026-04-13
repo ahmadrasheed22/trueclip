@@ -13,13 +13,13 @@ export default function SiteFooter() {
           aria-label="Legal links"
         >
           <Link
-            href="/privacy-policy"
+            href="/privacy"
             className="text-lg font-semibold text-zinc-100 transition hover:text-indigo-300"
           >
             Privacy Policy
           </Link>
           <Link
-            href="/terms-of-service"
+            href="/terms"
             className="text-lg font-semibold text-zinc-100 transition hover:text-indigo-300"
           >
             Terms of Service
