@@ -37,6 +37,8 @@ export default function Navbar({ syneFont }: NavbarProps) {
 
           <nav className="navbar-links" aria-label="Primary">
             <Link href="/">Home</Link>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/terms-of-service">Terms of Service</Link>
           </nav>
         </div>
       </header>

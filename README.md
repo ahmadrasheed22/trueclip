@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trueclip
 
-## Getting Started
+Trueclip is a Next.js App Router project for discovering YouTube Shorts and publishing generated short videos to TikTok.
 
-First, run the development server:
+## Features
+
+- YouTube channel search and Shorts browsing.
+- Favorites and recently viewed channel UX.
+- TikTok OAuth login with secure server-side session handling.
+- TikTok account display (username + avatar), logout, and direct post initialization via Content Posting API.
+- Legal pages:
+	- `/privacy-policy`
+	- `/terms-of-service`
+
+## Environment Setup
+
+Copy `.env.example` to `.env.local` and fill real values:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+copy .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Required TikTok values:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `TIKTOK_CLIENT_KEY`
+- `TIKTOK_CLIENT_SECRET`
+- `TIKTOK_REDIRECT_URI` (example: `http://localhost:3000/api/tiktok/callback`)
+- `TIKTOK_SESSION_SECRET`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Also ensure your TikTok app has this redirect URI registered in TikTok Developer portal.
 
-## Learn More
+## Local Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open `http://localhost:3000`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## TikTok Integration Notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Login flow uses official TikTok Login Kit authorization URL.
+- Access and refresh tokens are encrypted and stored in HTTP-only cookies.
+- Posting uses TikTok Content Posting Direct Post initialization endpoint with `PULL_FROM_URL`.
+- TikTok may require URL prefix ownership verification for `video_url` domains.
