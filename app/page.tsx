@@ -184,6 +184,7 @@ function normalizeShortItem(item: unknown): VideoItem | null {
   const titleRaw = source.title ?? snippet?.title ?? "Untitled Short";
   const publishedAtRaw = source.publishedAt ?? snippet?.publishedAt;
   const durationRaw = source.duration ?? contentDetails?.duration ?? "";
+  const mp4UrlRaw = source.mp4_url ?? source.mp4Url ?? source.video_url;
   const thumbnailRaw =
     source.thumbnail ?? highThumb?.url ?? mediumThumb?.url ?? defaultThumb?.url;
 
@@ -194,6 +195,7 @@ function normalizeShortItem(item: unknown): VideoItem | null {
     viewCount: (source.viewCount ?? statistics?.viewCount ?? "0") as string | number,
     likeCount: (source.likeCount ?? statistics?.likeCount ?? "0") as string | number,
     duration: String(durationRaw),
+    mp4_url: typeof mp4UrlRaw === "string" ? mp4UrlRaw : undefined,
     thumbnail: thumbnailRaw ? String(thumbnailRaw) : undefined,
   };
 }

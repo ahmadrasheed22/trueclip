@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import TikTokLogin from "@/components/TikTokLogin";
 
 type NavbarProps = {
   syneFont: string;
@@ -10,7 +11,6 @@ type NavbarProps = {
 
 export default function Navbar({ syneFont }: NavbarProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <>
@@ -40,21 +40,7 @@ export default function Navbar({ syneFont }: NavbarProps) {
             <Link href="/">Home</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
-            <button
-              type="button"
-              onClick={() => setIsLoggedIn((prev) => !prev)}
-              style={{
-                color: "var(--text-2)",
-                fontSize: "14px",
-                background: "transparent",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                transition: "color 0.2s ease",
-              }}
-            >
-              {isLoggedIn ? "Logout" : "Login"}
-            </button>
+            <TikTokLogin />
           </nav>
         </div>
       </header>
