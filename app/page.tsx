@@ -118,6 +118,7 @@ function normalizeShortItem(item: unknown): VideoItem | null {
   if (!videoIdRaw) return null;
 
   const titleRaw = source.title ?? snippet?.title ?? "Untitled Short";
+  const publishedAtRaw = source.publishedAt ?? snippet?.publishedAt;
   const durationRaw = source.duration ?? contentDetails?.duration ?? "";
   const thumbnailRaw =
     source.thumbnail ?? highThumb?.url ?? mediumThumb?.url ?? defaultThumb?.url;
@@ -125,6 +126,7 @@ function normalizeShortItem(item: unknown): VideoItem | null {
   return {
     videoId: String(videoIdRaw),
     title: String(titleRaw),
+    publishedAt: typeof publishedAtRaw === "string" ? publishedAtRaw : undefined,
     viewCount: (source.viewCount ?? statistics?.viewCount ?? "0") as string | number,
     likeCount: (source.likeCount ?? statistics?.likeCount ?? "0") as string | number,
     duration: String(durationRaw),
@@ -165,6 +167,7 @@ export default function HomePage({ searchParams }: HomePageProps) {
   const normalizedUrlQuery = queryFromUrl.trim();
   const hasUrlQuery = normalizedUrlQuery.length > 0;
   const lastLoadedQueryRef = useRef("");
+  const shortsRef = useRef<VideoItem[]>([]);
 
   const [query, setQuery] = useState("");
   const [channel, setChannel] = useState<ChannelInfo | null>(null);
@@ -176,10 +179,15 @@ export default function HomePage({ searchParams }: HomePageProps) {
   const [isLoadingShorts, setIsLoadingShorts] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasRequestedShorts, setHasRequestedShorts] = useState(false);
+  const [newShortsCount, setNewShortsCount] = useState(0);
   const [modalVideo, setModalVideo] = useState<{ videoId: string; title: string } | null>(null);
 
   const showHero = !channel && (!hasUrlQuery || Boolean(searchError));
   const showUrlLoading = !channel && hasUrlQuery && !searchError;
+
+  useEffect(() => {
+    shortsRef.current = shorts;
+  }, [shorts]);
 
   const resetToHero = useCallback(() => {
     setQuery("");
@@ -192,6 +200,7 @@ export default function HomePage({ searchParams }: HomePageProps) {
     setIsLoadingShorts(false);
     setIsLoadingMore(false);
     setHasRequestedShorts(false);
+    setNewShortsCount(0);
     setModalVideo(null);
   }, []);
 
@@ -245,6 +254,7 @@ export default function HomePage({ searchParams }: HomePageProps) {
       setShorts([]);
       setNextPageToken(null);
       setHasRequestedShorts(false);
+      setNewShortsCount(0);
 
       try {
         const response = await fetch(`/api/channel?q=${encodeURIComponent(searchValue)}`);
@@ -310,8 +320,66 @@ export default function HomePage({ searchParams }: HomePageProps) {
     void loadChannelByQuery(normalizedUrlQuery);
   }, [loadChannelByQuery, normalizedUrlQuery, resetToHero]);
 
+  useEffect(() => {
+    const channelId = channel?.id;
+    if (!channelId) return;
+
+    const refreshLatestShorts = async () => {
+      try {
+        const params = new URLSearchParams({ channelId });
+        const response = await fetch(`/api/shorts?${params.toString()}`);
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        const normalized = normalizeShortsResponse(payload);
+
+        if (normalized.videos.length === 0) return;
+
+        const existingIds = new Set(shortsRef.current.map((video) => video.videoId));
+        const newItems = normalized.videos.filter((video) => !existingIds.has(video.videoId));
+
+        if (newItems.length > 0) {
+          setShorts((prev) => [...newItems, ...prev]);
+          setNewShortsCount((prev) => prev + newItems.length);
+        }
+      } catch {
+        // Keep this refresh silent and retry on the next interval tick.
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void refreshLatestShorts();
+    }, 300000);
+
+    return () => window.clearInterval(intervalId);
+  }, [channel?.id]);
+
   return (
     <main className="page-root">
+      {newShortsCount > 0 ? (
+        <button
+          type="button"
+          style={{
+            position: "fixed",
+            top: "80px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "var(--accent)",
+            color: "white",
+            padding: "10px 24px",
+            borderRadius: "99px",
+            fontSize: "14px",
+            fontWeight: "600",
+            zIndex: 999,
+            cursor: "pointer",
+            border: "none",
+          }}
+          onClick={() => setNewShortsCount(0)}
+        >
+          {"\u2191"} {newShortsCount} new Shorts available - click to refresh
+        </button>
+      ) : null}
+
       <div className="page-container">
         {showHero ? (
           <section className="hero-section">

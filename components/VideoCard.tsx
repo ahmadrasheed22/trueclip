@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type VideoItem = {
   videoId: string;
   title: string;
   viewCount?: string | number;
   likeCount?: string | number;
+  publishedAt?: string;
   duration?: string;
   thumbnail?: string;
 };
@@ -36,10 +37,74 @@ export function formatDuration(iso: string | undefined | null) {
   return `${min}:${String(s).padStart(2, "0")}`;
 }
 
-export default function VideoCard({ video, onPlay }: VideoCardProps) {
-  const [downloadState, setDownloadState] = useState<"idle" | "loading" | "success" | "error">("idle");
+export function timeAgo(dateString: string | undefined | null) {
+  if (!dateString) return "Just now";
 
-  const thumbnail = video.thumbnail || `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`;
+  const now = new Date();
+  const uploaded = new Date(dateString);
+
+  if (Number.isNaN(uploaded.getTime())) return "Just now";
+
+  const diff = Math.floor((now.getTime() - uploaded.getTime()) / 1000);
+
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+  if (diff < 2592000) return `${Math.floor(diff / 604800)} weeks ago`;
+  if (diff < 31536000) return `${Math.floor(diff / 2592000)} months ago`;
+  return `${Math.floor(diff / 31536000)} years ago`;
+}
+
+export default function VideoCard({ video, onPlay }: VideoCardProps) {
+  const videoId = video.videoId;
+  const [downloadState, setDownloadState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [stats, setStats] = useState({
+    views: String(video.viewCount ?? "0"),
+    likes: String(video.likeCount ?? "0"),
+    publishedAt: video.publishedAt ?? "",
+  });
+
+  const thumbnail = video.thumbnail || `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const refreshStats = async () => {
+      try {
+        const response = await fetch(`/api/stats?videoId=${videoId}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok || !isMounted) return;
+
+        const data = (await response.json()) as {
+          viewCount?: string;
+          likeCount?: string;
+          publishedAt?: string;
+        };
+
+        setStats((prev) => ({
+          views: data.viewCount ?? prev.views,
+          likes: data.likeCount ?? prev.likes,
+          publishedAt: data.publishedAt ?? prev.publishedAt,
+        }));
+      } catch {
+        // Ignore transient polling errors and keep existing stats.
+      }
+    };
+
+    void refreshStats();
+
+    const intervalId = window.setInterval(() => {
+      void refreshStats();
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [videoId]);
 
   const handleDownload = async () => {
     if (downloadState === "loading") return;
@@ -132,9 +197,26 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
 
       <div className="video-body">
         <h3 className="video-title">{video.title}</h3>
-        <div className="video-stats">
-          <span>{"\u{1F441}"} {formatCount(video.viewCount)}</span>
-          <span>{"\u{2764}\u{FE0F}"} {formatCount(video.likeCount)}</span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "8px",
+          }}
+        >
+          <span style={{ fontSize: "12px", color: "var(--text-2)" }}>
+            {"\u{1F441}"} {formatCount(stats.views)}
+          </span>
+          <span style={{ fontSize: "12px", color: "var(--text-2)" }}>
+            {"\u{2764}\u{FE0F}"} {formatCount(stats.likes)}
+          </span>
+        </div>
+
+        <div style={{ marginTop: "4px" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-3)" }}>
+            {"\u{1F550}"} {timeAgo(stats.publishedAt)}
+          </span>
         </div>
 
         <button type="button" className={buttonClassName} onClick={handleDownload} disabled={downloadState === "loading"}>
