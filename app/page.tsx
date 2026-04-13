@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FormEvent, use, useCallback, useEffect, useRef, useState } from "react";
 import LiveMonitor from "@/components/LiveMonitor";
 import RecentlyViewed, { type StoredChannel } from "@/components/RecentlyViewed";
-import TikTokPublisher from "@/components/TikTokPublisher";
 import VideoCard, { VideoItem, formatCount } from "@/components/VideoCard";
 import VideoModal from "@/components/VideoModal";
 
@@ -709,7 +708,6 @@ export default function HomePage({ searchParams }: HomePageProps) {
           </section>
         ) : null}
 
-        <TikTokPublisher />
       </div>
 
       {modalVideo && (
