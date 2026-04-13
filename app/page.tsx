@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { FormEvent, useState } from "react";
 import VideoCard, { VideoItem, formatCount } from "@/components/VideoCard";
+import VideoModal from "@/components/VideoModal";
 
 type ChannelInfo = {
   id: string;
@@ -157,6 +158,7 @@ export default function HomePage() {
   const [isLoadingShorts, setIsLoadingShorts] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasRequestedShorts, setHasRequestedShorts] = useState(false);
+  const [modalVideo, setModalVideo] = useState<{ videoId: string; title: string } | null>(null);
 
   const resetToHero = () => {
     setChannel(null);
@@ -359,7 +361,11 @@ export default function HomePage() {
                 {shorts.length > 0 ? (
                   <div className="shorts-grid">
                     {shorts.map((video) => (
-                      <VideoCard key={`${video.videoId}-${video.title}`} video={video} />
+                      <VideoCard
+                        key={`${video.videoId}-${video.title}`}
+                        video={video}
+                        onPlay={() => setModalVideo({ videoId: video.videoId, title: video.title })}
+                      />
                     ))}
                   </div>
                 ) : null}
@@ -379,6 +385,14 @@ export default function HomePage() {
           </section>
         )}
       </div>
+
+      {modalVideo && (
+        <VideoModal
+          videoId={modalVideo.videoId}
+          title={modalVideo.title}
+          onClose={() => setModalVideo(null)}
+        />
+      )}
     </main>
   );
 }

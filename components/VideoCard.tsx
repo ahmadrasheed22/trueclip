@@ -13,6 +13,7 @@ export type VideoItem = {
 
 type VideoCardProps = {
   video: VideoItem;
+  onPlay?: () => void;
 };
 
 export function formatCount(n: string | number | undefined | null) {
@@ -35,7 +36,7 @@ export function formatDuration(iso: string | undefined | null) {
   return `${min}:${String(s).padStart(2, "0")}`;
 }
 
-export default function VideoCard({ video }: VideoCardProps) {
+export default function VideoCard({ video, onPlay }: VideoCardProps) {
   const [downloadState, setDownloadState] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const thumbnail = video.thumbnail || `https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg`;
@@ -74,9 +75,46 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <article className="video-card">
-      <div className="video-thumb">
+      <div className="video-thumb" onClick={onPlay} role="button" tabIndex={0} onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          onPlay?.();
+        }
+      }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="video-image" src={thumbnail} alt={video.title} loading="lazy" />
+
+        {/* Play button overlay — shown on hover */}
+        <div className="play-overlay" style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: 0,
+          transition: 'opacity 0.2s',
+        }}>
+          <div style={{
+            width: '52px',
+            height: '52px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.95)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            {/* Play triangle */}
+            <div style={{
+              width: 0,
+              height: 0,
+              borderTop: '10px solid transparent',
+              borderBottom: '10px solid transparent',
+              borderLeft: '18px solid #000',
+              marginLeft: '4px',
+            }} />
+          </div>
+        </div>
+
         <span className="duration-badge">{formatDuration(video.duration)}</span>
       </div>
 

@@ -430,6 +430,10 @@ a {
   transform: scale(1.04);
 }
 
+.video-card:hover .play-overlay {
+  opacity: 1 !important;
+}
+
 .duration-badge {
   position: absolute;
   right: 8px;
