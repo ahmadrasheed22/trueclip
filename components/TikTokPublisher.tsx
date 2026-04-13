@@ -1,32 +1,29 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-type TikTokUser = {
-  openId: string;
-  username: string;
-  displayName: string;
-  avatarUrl: string;
-};
-
-type Notice = {
-  type: "success" | "error" | "info";
-  text: string;
-};
+import TikTokAuthCard, {
+  type TikTokNotice,
+  type TikTokUser,
+} from "@/components/TikTokAuthCard";
+import TikTokPostCard from "@/components/TikTokPostCard";
 
 type SessionResponse = {
   authenticated: boolean;
   user?: TikTokUser;
 };
 
-type PostResponse = {
-  success?: boolean;
-  publishId?: string;
-  caption?: string;
-  message?: string;
-  error?: string;
-};
+function getNoticeClass(type: TikTokNotice["type"]) {
+  if (type === "success") {
+    return "border-emerald-500/40 bg-emerald-500/10 text-emerald-200";
+  }
+
+  if (type === "error") {
+    return "border-rose-500/40 bg-rose-500/10 text-rose-200";
+  }
+
+  return "border-indigo-500/40 bg-indigo-500/10 text-indigo-200";
+}
 
 export default function TikTokPublisher() {
   const router = useRouter();
@@ -34,12 +31,8 @@ export default function TikTokPublisher() {
   const searchParams = useSearchParams();
 
   const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isPosting, setIsPosting] = useState(false);
   const [user, setUser] = useState<TikTokUser | null>(null);
-  const [videoUrl, setVideoUrl] = useState("");
-  const [captionSeed, setCaptionSeed] = useState("My new short is live");
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const [notice, setNotice] = useState<TikTokNotice | null>(null);
 
   useEffect(() => {
     const callbackStatus = searchParams.get("tiktok");
@@ -96,178 +89,37 @@ export default function TikTokPublisher() {
     void loadSession();
   }, []);
 
-  const handleLogin = () => {
-    setNotice({
-      type: "info",
-      text: "Redirecting to TikTok login...",
-    });
-    window.location.assign("/api/tiktok/login");
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-
-    try {
-      await fetch("/api/tiktok/logout", {
-        method: "POST",
-      });
-
-      setUser(null);
-      setNotice({
-        type: "info",
-        text: "Logged out from TikTok.",
-      });
-    } catch {
-      setNotice({
-        type: "error",
-        text: "Unable to log out right now.",
-      });
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
-  const handlePost = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!videoUrl.trim()) {
-      setNotice({
-        type: "error",
-        text: "Please provide a valid HTTPS video URL first.",
-      });
-      return;
-    }
-
-    setIsPosting(true);
-    setNotice({
-      type: "info",
-      text: "Sending your video to TikTok...",
-    });
-
-    try {
-      const response = await fetch("/api/tiktok/post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          videoUrl,
-          captionSeed,
-        }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as PostResponse | null;
-
-      if (!response.ok || !payload?.success) {
-        throw new Error(payload?.error || "TikTok post request failed.");
-      }
-
-      setNotice({
-        type: "success",
-        text:
-          `Posted successfully. Publish ID: ${payload.publishId || "n/a"}. ` +
-          `Caption used: ${payload.caption || ""}`,
-      });
-    } catch (errorCause) {
-      setNotice({
-        type: "error",
-        text:
-          errorCause instanceof Error
-            ? errorCause.message
-            : "Unable to post to TikTok right now.",
-      });
-    } finally {
-      setIsPosting(false);
-    }
-  };
-
   return (
-    <section className="tiktok-panel" aria-label="TikTok publishing">
-      <div className="tiktok-panel-head">
-        <p className="tiktok-kicker">TikTok Automation</p>
-        <h2 className="tiktok-title heading-font">Publish direct to TikTok</h2>
-        <p className="tiktok-subtitle">
-          Connect once and post generated shorts with optimized caption and trending hashtags.
-        </p>
-      </div>
+    <section
+      aria-label="TikTok publishing"
+      className="mt-10 rounded-3xl border border-white/10 bg-zinc-950/70 p-6 md:p-8"
+    >
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
+        TikTok Integration
+      </p>
+      <h2 className="mt-2 text-2xl font-semibold text-zinc-50 md:text-3xl">
+        Login, manage account, and post in one flow
+      </h2>
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-300 md:text-base">
+        Trueclip uses official TikTok Login Kit and Content Posting API to publish short videos
+        directly from your workflow.
+      </p>
 
       {notice ? (
-        <p className={`tiktok-notice ${notice.type}`}>{notice.text}</p>
+        <p className={`mt-4 rounded-lg border px-3 py-2 text-sm ${getNoticeClass(notice.type)}`}>
+          {notice.text}
+        </p>
       ) : null}
 
-      {isCheckingSession ? <p className="tiktok-helper">Checking TikTok session...</p> : null}
-
-      {!isCheckingSession && !user ? (
-        <div className="tiktok-auth-box">
-          <button type="button" className="tiktok-login-btn" onClick={handleLogin}>
-            Login with TikTok
-          </button>
-          <p className="tiktok-helper">
-            Uses official TikTok OAuth. Tokens are stored in secure HTTP-only session cookies.
-          </p>
-        </div>
-      ) : null}
-
-      {user ? (
-        <div className="tiktok-connected-box">
-          <div className="tiktok-user-row">
-            <div className="tiktok-user-copy">
-              {user.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.avatarUrl} alt={user.displayName} className="tiktok-avatar" />
-              ) : (
-                <span className="tiktok-avatar tiktok-avatar-fallback" aria-hidden="true" />
-              )}
-
-              <div>
-                <p className="tiktok-user-name">{user.displayName}</p>
-                <p className="tiktok-user-handle">@{user.username}</p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="tiktok-logout-btn"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-            >
-              {isLoggingOut ? "Logging out..." : "Logout"}
-            </button>
-          </div>
-
-          <form className="tiktok-post-form" onSubmit={handlePost}>
-            <label className="tiktok-label" htmlFor="tiktok-video-url">
-              Generated video URL (HTTPS)
-            </label>
-            <input
-              id="tiktok-video-url"
-              className="tiktok-input"
-              type="url"
-              required
-              placeholder="https://cdn.yourdomain.com/generated-video.mp4"
-              value={videoUrl}
-              onChange={(event) => setVideoUrl(event.target.value)}
-            />
-
-            <label className="tiktok-label" htmlFor="tiktok-caption-seed">
-              Caption seed (optional)
-            </label>
-            <input
-              id="tiktok-caption-seed"
-              className="tiktok-input"
-              type="text"
-              maxLength={160}
-              placeholder="Describe the short in one sentence"
-              value={captionSeed}
-              onChange={(event) => setCaptionSeed(event.target.value)}
-            />
-
-            <button type="submit" className="tiktok-post-btn" disabled={isPosting}>
-              {isPosting ? "Posting to TikTok..." : "Post to TikTok"}
-            </button>
-          </form>
-        </div>
-      ) : null}
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <TikTokAuthCard
+          user={user}
+          isCheckingSession={isCheckingSession}
+          onUserChange={setUser}
+          onNotice={setNotice}
+        />
+        <TikTokPostCard user={user} />
+      </div>
     </section>
   );
 }

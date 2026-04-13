@@ -7,70 +7,32 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="legal-page">
-      <div className="page-container">
-        <article className="legal-card">
-          <p className="legal-kicker">Legal</p>
-          <h1 className="legal-title heading-font">Privacy Policy</h1>
-          <p className="legal-updated">Effective date: April 13, 2026</p>
+    <main className="min-h-[calc(100vh-64px)] py-10">
+      <div className="mx-auto w-full max-w-4xl px-6">
+        <article className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 text-zinc-200 md:p-10">
+          <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
+          <p className="mb-4">Last updated: April 13, 2026</p>
+          <p>Trueclip (Shortshub) respects your privacy. This Privacy Policy explains how we collect, use, and protect your information when you use our website and TikTok integration features.</p>
 
-          <section className="legal-section">
-            <h2>1. Information We Collect</h2>
-            <p>
-              We collect only the information needed to provide and improve Trueclip features,
-              including account details from connected providers, usage analytics, and technical
-              logs necessary for security and reliability.
-            </p>
-          </section>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">Information We Collect</h2>
+          <ul className="list-disc pl-6 mb-6">
+            <li>TikTok account information (username, avatar, access token) when you log in using TikTok Login Kit</li>
+            <li>Short video clips you create or upload</li>
+            <li>Usage data and analytics</li>
+          </ul>
 
-          <section className="legal-section">
-            <h2>2. How We Use Information</h2>
-            <p>
-              Data is used to authenticate users, support publishing flows, improve product
-              performance, and prevent abuse. We do not sell personal information.
-            </p>
-          </section>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">How We Use Your Information</h2>
+          <ul className="list-disc pl-6 mb-6">
+            <li>To enable seamless TikTok login, display your current account, and allow logout</li>
+            <li>To post your short videos directly to TikTok with auto-generated captions and trending hashtags</li>
+            <li>To improve our service</li>
+          </ul>
 
-          <section className="legal-section">
-            <h2>3. TikTok Integration Data</h2>
-            <p>
-              When you connect TikTok, we securely process authorization tokens and basic profile
-              data (such as username and avatar) to enable login and content posting actions on your
-              behalf.
-            </p>
-          </section>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">Sharing with Third Parties</h2>
+          <p>We only share your TikTok access token with TikTok’s official APIs to perform login and posting on your behalf. We do not sell your personal data.</p>
 
-          <section className="legal-section">
-            <h2>4. Data Security</h2>
-            <p>
-              Sensitive tokens are stored in secure HTTP-only sessions. We apply reasonable technical
-              and organizational safeguards to protect data from unauthorized access.
-            </p>
-          </section>
-
-          <section className="legal-section">
-            <h2>5. Retention</h2>
-            <p>
-              We keep data only for as long as necessary to operate the service, satisfy legal
-              obligations, and resolve disputes.
-            </p>
-          </section>
-
-          <section className="legal-section">
-            <h2>6. Your Rights</h2>
-            <p>
-              Depending on your location, you may have rights to access, correct, or delete personal
-              data. You can also disconnect third-party accounts at any time.
-            </p>
-          </section>
-
-          <section className="legal-section">
-            <h2>7. Contact</h2>
-            <p>
-              For privacy-related requests, contact the Trueclip support team. You can replace this
-              section with your official legal contact details later.
-            </p>
-          </section>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">Contact Us</h2>
+          <p>If you have any questions, contact us at support@trueclip.com</p>
         </article>
       </div>
     </main>
