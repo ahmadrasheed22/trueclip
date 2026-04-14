@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Trueclip - YouTube Shorts Tracker",
   description:
     "Search any YouTube channel and instantly browse and download their Shorts.",
+  other: {
+    "tiktok-domain-verification": "tjvBdCa1YkL9GehhP80jrLgulH2sbFhz",
+  },
 };
 
 export default function RootLayout({
