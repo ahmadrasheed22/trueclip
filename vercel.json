@@ -1,0 +1,11 @@
+{
+  "headers": [
+    {
+      "source": "/tiktok-:slug*.html",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html" },
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    }
+  ]
+}
