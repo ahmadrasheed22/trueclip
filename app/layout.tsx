@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description:
     "Search any YouTube channel and instantly browse and download their Shorts.",
   other: {
-    "tiktok-domain-verification": "tjvBdCa1YkL9GehhP80jrLgulH2sbFhz",
+    "tiktok-developers-site-verification": "WBEkGL12zExpGgfUqlhy5QdIEH0htJZH",
   },
 };
 
