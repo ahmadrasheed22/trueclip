@@ -227,7 +227,8 @@ export async function refreshTikTokAccessToken(refreshToken: string): Promise<Ti
 }
 
 export async function fetchTikTokUserProfile(accessToken: string): Promise<TikTokUserProfile> {
-  const fields = "open_id,display_name,avatar_url,username";
+  // Keep profile fields compatible with user.info.basic scope.
+  const fields = "open_id,display_name,avatar_url";
 
   const response = await fetch(`${TIKTOK_API_BASE_URL}/user/info/?fields=${fields}`, {
     method: "GET",
