@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import LegalPageLayout, { LegalSection } from "@/components/LegalPageLayout";
+import LegalPageLayout, {
+  LegalNumberedSection,
+  legalLinkClassName,
+  LegalParagraph,
+} from "@/components/LegalPageLayout";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Trueclip",
@@ -9,54 +13,55 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <LegalPageLayout
-      eyebrow="Privacy"
       title="Privacy Policy"
-      description="This policy explains what information Trueclip processes, why it is processed, and the controls available to users."
+      siteLabel="www.trueclip.vercel.app"
       lastUpdated="April 15, 2026"
+      contactEmail="privacy@trueclip.app"
     >
-      <LegalSection title="What We Collect">
-        <ul className="list-disc space-y-2 pl-5">
-          <li>
-            TikTok account profile data returned by TikTok Login Kit (for example: open ID,
-            username, display name, and avatar URL).
-          </li>
-          <li>Public YouTube channel and Shorts analytics data requested by your search actions.</li>
-          <li>Basic usage telemetry needed for reliability, debugging, and abuse prevention.</li>
-        </ul>
-      </LegalSection>
+      <LegalNumberedSection index={1}>
+        By using Trueclip, you agree to this Privacy Policy and the data handling practices
+        described on this page.
+      </LegalNumberedSection>
 
-      <LegalSection title="How We Use Information">
-        <ul className="list-disc space-y-2 pl-5">
-          <li>To authenticate your TikTok account and show connected account details.</li>
-          <li>To process explicit publish actions you initiate from the Trueclip interface.</li>
-          <li>To provide channel discovery, performance views, and product improvements.</li>
-        </ul>
-      </LegalSection>
+      <LegalNumberedSection index={2}>
+        We only collect information required to run the service, connect TikTok with Login Kit,
+        and provide requested analytics features.
+      </LegalNumberedSection>
 
-      <LegalSection title="Session and Token Handling">
-        <p>
-          OAuth tokens are stored in encrypted HTTP-only cookies. Trueclip does not expose tokens
-          in the browser URL and does not maintain a long-term user token database by default.
-        </p>
-      </LegalSection>
+      <LegalNumberedSection index={3}>
+        TikTok Login Kit returns basic profile fields such as open_id, username, display_name,
+        and avatar_url after your consent.
+      </LegalNumberedSection>
 
-      <LegalSection title="Third-Party Services">
-        <p>
-          Trueclip communicates with official TikTok and YouTube APIs only for authentication,
-          publishing, and analytics features you choose to use.
-        </p>
-      </LegalSection>
+      <LegalNumberedSection index={4}>
+        We use technical cookies and reliability logs to keep the website stable, secure, and
+        responsive.
+        <LegalParagraph>
+          These signals help us maintain service quality, troubleshoot failures, and improve user
+          experience over time.
+        </LegalParagraph>
+      </LegalNumberedSection>
 
-      <LegalSection title="Data Retention and Control">
-        <p>
-          You can disconnect TikTok at any time from the Trueclip interface. We also support
-          reasonable deletion requests where required by law.
-        </p>
-      </LegalSection>
+      <LegalNumberedSection index={5}>
+        We do not sell your personal data. Data may be shared only with official platform APIs
+        when required to complete the features you request.
+      </LegalNumberedSection>
 
-      <LegalSection title="Contact">
-        <p>For privacy requests, contact privacy@trueclip.app.</p>
-      </LegalSection>
+      <LegalNumberedSection index={6}>
+        Third-party services linked from Trueclip operate under their own policies. We recommend
+        reviewing those policies before using external services.
+      </LegalNumberedSection>
+
+      <LegalNumberedSection index={7}>
+        We may update this Privacy Policy when features or legal requirements change.
+        <LegalParagraph>
+          For privacy requests, contact{" "}
+          <a href="mailto:privacy@trueclip.app" className={legalLinkClassName}>
+            privacy@trueclip.app
+          </a>
+          .
+        </LegalParagraph>
+      </LegalNumberedSection>
     </LegalPageLayout>
   );
 }
