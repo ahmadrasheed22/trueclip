@@ -98,7 +98,8 @@ export default function TikTokLogin() {
   }, []);
 
   const connect = () => {
-    window.location.assign("/api/tiktok/login");
+    const cacheBust = Date.now();
+    window.location.assign(`/api/tiktok/login?ts=${cacheBust}`);
   };
 
   const disconnect = async () => {

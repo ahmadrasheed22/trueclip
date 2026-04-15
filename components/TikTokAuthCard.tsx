@@ -31,7 +31,8 @@ export default function TikTokAuthCard({
 
   const handleLogin = () => {
     onNotice({ type: "info", text: "Redirecting to TikTok login..." });
-    window.location.assign("/api/tiktok/login");
+    const cacheBust = Date.now();
+    window.location.assign(`/api/tiktok/login?ts=${cacheBust}`);
   };
 
   const handleLogout = async () => {

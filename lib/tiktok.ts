@@ -165,6 +165,8 @@ export function buildTikTokAuthorizeUrl(state: string): string {
   url.searchParams.set("scope", scope);
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("state", state);
+  // Force TikTok to always show the auth screen and avoid stale session auto-auth paths.
+  url.searchParams.set("disable_auto_auth", "1");
 
   return url.toString();
 }
