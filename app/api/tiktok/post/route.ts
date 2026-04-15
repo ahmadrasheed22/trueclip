@@ -15,6 +15,13 @@ type PostRequestBody = {
   captionSeed?: string;
 };
 
+function hasScope(scopeValue: string, requiredScope: string): boolean {
+  return scopeValue
+    .split(",")
+    .map((scopeItem) => scopeItem.trim())
+    .includes(requiredScope);
+}
+
 function isHttpsUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
@@ -50,6 +57,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "TikTok session not found. Please log in again." },
         { status: 401 }
+      );
+    }
+
+    if (!hasScope(session.scope, "video.publish")) {
+      return NextResponse.json(
+        {
+          error:
+            "This TikTok session is Login Kit only. Add the Content Posting product, include video.publish in TIKTOK_SCOPE, then reconnect your TikTok account.",
+        },
+        { status: 403 }
       );
     }
 

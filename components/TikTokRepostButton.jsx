@@ -2,21 +2,26 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "tiktok_user";
+const SESSION_USER_STORAGE_KEY = "trueclip_tiktok_user";
 
-function readStoredUser() {
+function readStoredSessionUser() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(SESSION_USER_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
 
     return {
-      access_token: String(parsed.access_token || ""),
+      openId: String(parsed.openId || ""),
     };
   } catch {
     return null;
   }
+}
+
+function clearStoredSessionUser() {
+  localStorage.removeItem(SESSION_USER_STORAGE_KEY);
+  window.dispatchEvent(new Event("trueclip-tiktok-session-updated"));
 }
 
 function toAbsoluteUrl(videoUrl) {
@@ -33,10 +38,21 @@ export default function TikTokRepostButton({ videoUrl, title }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    setUser(readStoredUser());
+    const syncSession = () => {
+      setUser(readStoredSessionUser());
+    };
+
+    syncSession();
+    window.addEventListener("trueclip-tiktok-session-updated", syncSession);
+    window.addEventListener("storage", syncSession);
+
+    return () => {
+      window.removeEventListener("trueclip-tiktok-session-updated", syncSession);
+      window.removeEventListener("storage", syncSession);
+    };
   }, []);
 
-  const isConnected = Boolean(user?.access_token);
+  const isConnected = Boolean(user?.openId);
 
   const handleRepost = async () => {
     if (!isConnected || state === "loading") return;
@@ -52,26 +68,31 @@ export default function TikTokRepostButton({ videoUrl, title }) {
     setMessage("Posting to TikTok...");
 
     try {
-      const response = await fetch("/api/tiktok/repost", {
+      const response = await fetch("/api/tiktok/post", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          access_token: user.access_token,
-          video_url: absoluteVideoUrl,
-          title: title || "Posted from Trueclip",
+          videoUrl: absoluteVideoUrl,
+          captionSeed: title || "Posted from Trueclip",
         }),
       });
 
       const payload = await response.json().catch(() => null);
 
       if (!response.ok || !payload?.success) {
+        if (response.status === 401) {
+          clearStoredSessionUser();
+          setUser(null);
+        }
+
         throw new Error(payload?.error || "Unable to repost right now.");
       }
 
       setState("success");
-      setMessage("Posted successfully to TikTok.");
+      const publishId = payload?.publishId || "n/a";
+      setMessage(`Posted successfully to TikTok. Publish ID: ${publishId}.`);
     } catch (errorCause) {
       setState("error");
       setMessage(errorCause instanceof Error ? errorCause.message : "Unable to repost right now.");

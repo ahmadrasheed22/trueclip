@@ -9,8 +9,8 @@ Trueclip is a Next.js App Router project for discovering YouTube Shorts and publ
 - TikTok OAuth login with secure server-side session handling.
 - TikTok account display (username + avatar), logout, and direct post initialization via Content Posting API.
 - Legal pages:
-	- `/privacy-policy`
-	- `/terms-of-service`
+	- `/privacy`
+	- `/terms`
 
 ## Environment Setup
 
@@ -28,6 +28,12 @@ Required TikTok values:
 - `TIKTOK_SESSION_SECRET`
 
 Also ensure your TikTok app has this redirect URI registered in TikTok Developer portal.
+
+Notes:
+
+- `TIKTOK_SCOPE` defaults to `user.info.basic` for Login Kit review.
+- Add `video.publish` to `TIKTOK_SCOPE` only when Content Posting is enabled in TikTok Developer Portal.
+- Legacy callback path `/api/auth/tiktok/callback` is still supported and forwards to `/api/tiktok/callback`.
 
 ## Local Development
 

@@ -2,7 +2,8 @@ import crypto from "crypto";
 
 const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
 const TIKTOK_API_BASE_URL = "https://open.tiktokapis.com/v2";
-const DEFAULT_SCOPE = "user.info.basic,video.publish";
+// Keep defaults review-friendly for Login Kit; add video.publish via TIKTOK_SCOPE when needed.
+const DEFAULT_SCOPE = "user.info.basic";
 
 export type TikTokUserProfile = {
   openId: string;
