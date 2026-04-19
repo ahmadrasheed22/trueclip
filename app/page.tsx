@@ -407,7 +407,6 @@ export default function HomePage({ searchParams }: HomePageProps) {
   const handleSelectChannel = useCallback(
     (channelBasic: StoredChannel) => {
       const targetQuery = channelBasic.id;
-      setQuery(targetQuery);
 
       if (targetQuery === normalizedUrlQuery) {
         lastLoadedQueryRef.current = targetQuery;
