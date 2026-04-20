@@ -38,6 +38,7 @@ export default function Navbar({ syneFont }: NavbarProps) {
 
           <nav className="navbar-links" aria-label="Primary">
             <Link href="/">Home</Link>
+            <Link href="/generate">AI Clips</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
             <TikTokLogin />
