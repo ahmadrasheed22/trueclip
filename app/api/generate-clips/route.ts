@@ -15,6 +15,34 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function mapKnownExtractorError(rawMessage: string): string {
+  const errorMatch = rawMessage.match(/error:\s*([\s\S]+)/i);
+  const normalizedMessage = normalizeWhitespace(errorMatch?.[1] ?? rawMessage);
+  const lower = normalizedMessage.toLowerCase();
+
+  if (
+    lower.includes("sign in to confirm you're not a bot") ||
+    lower.includes("--cookies-from-browser") ||
+    lower.includes("use --cookies")
+  ) {
+    return "YouTube blocked automated access for this video. Configure authenticated yt-dlp cookies on the clip backend, then try again.";
+  }
+
+  if (lower.includes("private video") || lower.includes("members-only")) {
+    return "This video is private or members-only. Please try a public YouTube video.";
+  }
+
+  if (lower.includes("video unavailable") || lower.includes("not available")) {
+    return "This video is unavailable or region-restricted. Please try another YouTube video.";
+  }
+
+  return normalizedMessage;
+}
+
 function isValidYouTubeUrl(rawUrl: string): boolean {
   try {
     const url = new URL(rawUrl.trim());
@@ -117,7 +145,7 @@ function extractErrorMessage(payload: unknown): string | null {
   const candidate = root.error ?? root.message ?? root.detail;
 
   if (typeof candidate === "string" && candidate.trim()) {
-    return candidate.trim();
+    return mapKnownExtractorError(candidate);
   }
 
   return null;

@@ -21,28 +21,76 @@ function removeTempFile(filePath) {
   }
 }
 
+function readCookieArgs() {
+  const cookiesFile = process.env.YTDLP_COOKIES_FILE?.trim();
+  if (cookiesFile) {
+    return ["--cookies", cookiesFile];
+  }
+
+  const cookiesFromBrowser = process.env.YTDLP_COOKIES_FROM_BROWSER?.trim();
+  if (cookiesFromBrowser) {
+    return ["--cookies-from-browser", cookiesFromBrowser];
+  }
+
+  return [];
+}
+
+function buildYtdlpArgs(videoUrl, tempFile) {
+  return [
+    "-f",
+    "best[ext=mp4]/best",
+    "-o",
+    tempFile,
+    "--force-overwrites",
+    "--no-warnings",
+    "--no-playlist",
+    "--no-part",
+    "--retries",
+    "3",
+    "--socket-timeout",
+    "15",
+    ...readCookieArgs(),
+    videoUrl,
+  ];
+}
+
+function mapYtdlpFailure(stderrOutput) {
+  const normalized =
+    typeof stderrOutput === "string" ? stderrOutput.replace(/\s+/g, " ").trim() : "";
+  const lower = normalized.toLowerCase();
+
+  if (
+    lower.includes("sign in to confirm you're not a bot") ||
+    lower.includes("--cookies-from-browser") ||
+    lower.includes("use --cookies")
+  ) {
+    return "YouTube blocked this request. Set YTDLP_COOKIES_FROM_BROWSER or YTDLP_COOKIES_FILE on the server, then try again.";
+  }
+
+  if (lower.includes("unable to load cookie file")) {
+    return "YTDLP_COOKIES_FILE is set but the cookies file could not be read by the server.";
+  }
+
+  if (lower.includes("private video") || lower.includes("members-only")) {
+    return "This video is private or members-only and cannot be downloaded.";
+  }
+
+  if (lower.includes("video unavailable") || lower.includes("not available")) {
+    return "This video is unavailable or region-restricted.";
+  }
+
+  return "Download failed.";
+}
+
 function downloadWithYtDlp(videoUrl, tempFile) {
   return new Promise((resolve, reject) => {
     const localYtdlpPath = path.join(process.cwd(), "yt-dlp.exe");
     const ytdlpPath = fs.existsSync(localYtdlpPath) ? localYtdlpPath : "yt-dlp";
+    const ytdlpArgs = buildYtdlpArgs(videoUrl, tempFile);
 
     const ytdlp = spawn(
       ytdlpPath,
-      [
-        "-f",
-        "best[ext=mp4]/best",
-        "-o",
-        tempFile,
-        "--force-overwrites",
-        "--no-warnings",
-        "--no-playlist",
-        "--no-part",
-        "--retries",
-        "3",
-        "--socket-timeout",
-        "15",
-        videoUrl,
-      ],
+      ytdlpArgs,
       {
         windowsHide: true,
         shell: false,
@@ -50,6 +98,11 @@ function downloadWithYtDlp(videoUrl, tempFile) {
     );
 
     let settled = false;
+    let stderrOutput = "";
+
+    ytdlp.stderr.on("data", (chunk) => {
+      stderrOutput += chunk.toString();
+    });
 
     const timeoutId = setTimeout(() => {
       if (settled) return;
@@ -68,21 +121,7 @@ function downloadWithYtDlp(videoUrl, tempFile) {
       if (fallbackPath !== ytdlp.spawnfile && (fallbackPath === "yt-dlp" || fs.existsSync(fallbackPath))) {
         const retry = spawn(
           fallbackPath,
-          [
-            "-f",
-            "best[ext=mp4]/best",
-            "-o",
-            tempFile,
-            "--force-overwrites",
-            "--no-warnings",
-            "--no-playlist",
-            "--no-part",
-            "--retries",
-            "3",
-            "--socket-timeout",
-            "15",
-            videoUrl,
-          ],
+          ytdlpArgs,
           {
             windowsHide: true,
             shell: false,
@@ -90,6 +129,12 @@ function downloadWithYtDlp(videoUrl, tempFile) {
         );
 
         let retrySettled = false;
+        let retryStderrOutput = "";
+
+        retry.stderr.on("data", (chunk) => {
+          retryStderrOutput += chunk.toString();
+        });
+
         const retryTimeoutId = setTimeout(() => {
           if (retrySettled) return;
           retrySettled = true;
@@ -114,7 +159,7 @@ function downloadWithYtDlp(videoUrl, tempFile) {
             return;
           }
 
-          reject(new Error("Download failed."));
+          reject(new Error(mapYtdlpFailure(retryStderrOutput)));
         });
 
         return;
@@ -133,7 +178,7 @@ function downloadWithYtDlp(videoUrl, tempFile) {
         return;
       }
 
-      reject(new Error("Download failed."));
+      reject(new Error(mapYtdlpFailure(stderrOutput)));
     });
   });
 }
@@ -177,6 +222,10 @@ export async function GET(request) {
 
     if (error instanceof Error && error.message === "Download timed out.") {
       return NextResponse.json({ error: "Download timed out." }, { status: 504 });
+    }
+
+    if (error instanceof Error && error.message && error.message !== "Download failed.") {
+      return NextResponse.json({ error: error.message }, { status: 502 });
     }
 
     return NextResponse.json({ error: "Download failed." }, { status: 500 });
