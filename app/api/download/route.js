@@ -35,6 +35,22 @@ function readCookieArgs() {
   return [];
 }
 
+function readJsRuntimeArgs() {
+  const configuredRuntimes = process.env.YTDLP_JS_RUNTIMES?.trim();
+  const runtimes = configuredRuntimes || "node";
+
+  return ["--js-runtimes", runtimes];
+}
+
+function readExtractorArgs() {
+  const extractorArgs = process.env.YTDLP_EXTRACTOR_ARGS?.trim();
+  if (!extractorArgs) {
+    return [];
+  }
+
+  return ["--extractor-args", extractorArgs];
+}
+
 function buildYtdlpArgs(videoUrl, tempFile) {
   return [
     "-f",
@@ -49,6 +65,8 @@ function buildYtdlpArgs(videoUrl, tempFile) {
     "3",
     "--socket-timeout",
     "15",
+    ...readJsRuntimeArgs(),
+    ...readExtractorArgs(),
     ...readCookieArgs(),
     videoUrl,
   ];
@@ -58,6 +76,10 @@ function mapYtdlpFailure(stderrOutput) {
   const normalized =
     typeof stderrOutput === "string" ? stderrOutput.replace(/\s+/g, " ").trim() : "";
   const lower = normalized.toLowerCase();
+
+  if (lower.includes("no supported javascript runtime could be found")) {
+    return "yt-dlp could not run YouTube JavaScript extraction. Set YTDLP_JS_RUNTIMES=node on the server and try again.";
+  }
 
   if (
     lower.includes("sign in to confirm you're not a bot") ||
