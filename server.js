@@ -19,6 +19,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 function setupCookies() {
   const b64 = process.env.YTDLP_COOKIES_B64;
   const cookiePath = process.env.YTDLP_COOKIES_FILE || '/tmp/youtube-cookies.txt';
+  const fallbackCookiePath = '/tmp/youtube-cookies.txt';
+  const rootCookieFile = `${process.cwd()}/cookies.txt`;
 
   if (b64) {
     try {
@@ -29,7 +31,16 @@ function setupCookies() {
       console.warn('Failed to write cookies from YTDLP_COOKIES_B64:', e.message);
     }
   } else {
-    console.log('No YTDLP_COOKIES_B64 set - running without cookies.');
+    try {
+      if (fs.existsSync(rootCookieFile)) {
+        fs.copyFileSync(rootCookieFile, fallbackCookiePath);
+        console.log(`Copied cookies from ${rootCookieFile} to ${fallbackCookiePath}`);
+      } else {
+        console.log('No YTDLP_COOKIES_B64 set and no root cookies.txt found - running without cookies.');
+      }
+    } catch (e) {
+      console.warn('Failed to copy root cookies.txt to /tmp/youtube-cookies.txt:', e.message);
+    }
   }
 }
 
