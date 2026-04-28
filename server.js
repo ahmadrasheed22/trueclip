@@ -48,7 +48,8 @@ function buildYtDlpCommand(targetUrl, videoPath) {
   cmd += ` --no-playlist`;
   cmd += ` --retries 10`;
   cmd += ` --socket-timeout 60`;
-  cmd += ` --extractor-args "youtube:player_client=tv,web"`;
+  const extractorArgs = process.env.YTDLP_EXTRACTOR_ARGS || "youtube:player_client=android,web";
+  cmd += ` --extractor-args "${extractorArgs}"`;
   cmd += ` --add-header "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1"`;
   cmd += ` --add-header "Accept-Language:en-US,en;q=0.9"`;
 
