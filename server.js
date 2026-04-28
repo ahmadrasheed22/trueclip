@@ -47,7 +47,6 @@ function setupCookies() {
 // --- Build yt-dlp command with all env-driven flags ---
 function buildYtDlpCommand(targetUrl, videoPath) {
   const jsRuntime = process.env.YTDLP_JS_RUNTIMES || 'node';
-  const extractorArgs = process.env.YTDLP_EXTRACTOR_ARGS;
   const cookiesFile = process.env.YTDLP_COOKIES_FILE || '/tmp/youtube-cookies.txt';
 
   let cmd = 'yt-dlp';
@@ -57,10 +56,7 @@ function buildYtDlpCommand(targetUrl, videoPath) {
   cmd += ' --retries 5';
   cmd += ' --socket-timeout 30';
   cmd += ` --js-runtimes "${jsRuntime}"`;
-
-  if (extractorArgs) {
-    cmd += ` --extractor-args "${extractorArgs}"`;
-  }
+  cmd += ` --extractor-args "youtube:player_client=tv,mweb"`;
 
   if (fs.existsSync(cookiesFile)) {
     cmd += ` --cookies "${cookiesFile}"`;
