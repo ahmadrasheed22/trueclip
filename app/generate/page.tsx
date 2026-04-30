@@ -96,7 +96,7 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const response = await fetch("http://localhost:8000/generate", {
+      const response = await fetch("/api/generate-clips", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

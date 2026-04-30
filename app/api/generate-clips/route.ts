@@ -337,7 +337,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(invalidJsonResponse, { status: 400 });
   }
 
-  const youtubeUrl = asRecord(requestBody)?.youtubeUrl;
+  const recordBody = asRecord(requestBody);
+  const youtubeUrl = recordBody?.youtubeUrl;
+  const subtitleStyle = recordBody?.subtitleStyle;
+  const highlightColor = recordBody?.highlightColor;
+  const fontSize = recordBody?.fontSize;
+  const position = recordBody?.position;
 
   if (typeof youtubeUrl !== "string" || !youtubeUrl.trim()) {
     const invalidInputResponse: GenerateResponse = {
@@ -412,7 +417,13 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ youtubeUrl: target.youtubeUrl }),
+        body: JSON.stringify({ 
+          youtubeUrl: target.youtubeUrl,
+          subtitleStyle,
+          highlightColor,
+          fontSize,
+          position
+        }),
         signal: controller.signal,
         cache: "no-store",
       });
