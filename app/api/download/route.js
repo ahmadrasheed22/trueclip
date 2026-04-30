@@ -61,6 +61,7 @@ function buildYtdlpArgs(videoUrl, tempFile) {
     "--no-warnings",
     "--no-playlist",
     "--no-part",
+    "--geo-bypass",
     "--retries",
     "3",
     "--socket-timeout",
