@@ -53,6 +53,10 @@ export default function GeneratePage() {
   const [clips, setClips] = useState<Clip[]>([]);
   const [error, setError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [subtitleStyle, setSubtitleStyle] = useState("karaoke");
+  const [highlightColor, setHighlightColor] = useState("#FFD700");
+  const [fontSize, setFontSize] = useState(70);
+  const [position, setPosition] = useState("bottom");
 
   useEffect(() => {
     if (!isLoading) {
@@ -92,12 +96,18 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const response = await fetch("/api/generate-clips", {
+      const response = await fetch("http://localhost:8000/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ youtubeUrl: trimmedUrl }),
+        body: JSON.stringify({ 
+          youtubeUrl: trimmedUrl,
+          subtitleStyle,
+          highlightColor,
+          fontSize,
+          position
+        }),
       });
 
       const payload = (await response.json().catch(() => null)) as
@@ -146,25 +156,97 @@ export default function GeneratePage() {
             then return ready-to-download clips.
           </p>
 
-          <form className="mt-8 flex flex-col gap-4 sm:flex-row" onSubmit={handleSubmit}>
-            <input
-              type="url"
-              inputMode="url"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={youtubeUrl}
-              onChange={(event) => setYoutubeUrl(event.target.value)}
-              className="h-12 w-full rounded-xl border border-[var(--border-2)] bg-[var(--bg)] px-4 text-sm text-[var(--text-1)] outline-none transition focus:border-[var(--accent)] placeholder:text-[var(--text-3)]"
-              aria-label="YouTube URL"
-              disabled={isLoading}
-            />
+          <form className="mt-8 flex flex-col gap-6" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <input
+                type="url"
+                inputMode="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(event) => setYoutubeUrl(event.target.value)}
+                className="h-12 w-full rounded-xl border border-[var(--border-2)] bg-[var(--bg)] px-4 text-sm text-[var(--text-1)] outline-none transition focus:border-[var(--accent)] placeholder:text-[var(--text-3)]"
+                aria-label="YouTube URL"
+                disabled={isLoading}
+              />
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--accent)] px-6 text-sm font-semibold text-white transition hover:bg-[var(--accent-2)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isLoading ? "Generating..." : "Generate Clips"}
-            </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--accent)] px-8 text-sm font-semibold text-white transition hover:bg-[var(--accent-2)] disabled:cursor-not-allowed disabled:opacity-70 whitespace-nowrap"
+              >
+                {isLoading ? "Generating..." : "Generate Clips"}
+              </button>
+            </div>
+
+            {/* Subtitle Preferences Section */}
+            <div className="grid gap-6 rounded-2xl border border-[var(--border)] bg-[rgba(8,8,8,0.4)] p-5 sm:grid-cols-2 lg:grid-cols-4">
+              
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wide text-[var(--text-2)] uppercase">Subtitle Style</label>
+                <select 
+                  value={subtitleStyle}
+                  onChange={(e) => setSubtitleStyle(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-[var(--border-2)] bg-[var(--bg)] px-3 text-sm text-[var(--text-1)] outline-none focus:border-[var(--accent)]"
+                  disabled={isLoading}
+                >
+                  <option value="karaoke">Karaoke (2short style)</option>
+                  <option value="clean">Clean (No background)</option>
+                  <option value="background">Background Box</option>
+                  <option value="neon">Neon Glow</option>
+                  <option value="outline">Heavy Outline</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wide text-[var(--text-2)] uppercase">Highlight Color</label>
+                <div className="flex h-10 items-center gap-3 rounded-lg border border-[var(--border-2)] bg-[var(--bg)] px-3">
+                  <input 
+                    type="color" 
+                    value={highlightColor}
+                    onChange={(e) => setHighlightColor(e.target.value)}
+                    className="h-6 w-6 cursor-pointer rounded-full border-none bg-transparent p-0 outline-none"
+                    disabled={isLoading}
+                  />
+                  <span className="text-sm font-medium text-[var(--text-1)]">{highlightColor.toUpperCase()}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wide text-[var(--text-2)] uppercase">Font Size ({fontSize}px)</label>
+                <input 
+                  type="range"
+                  min="40"
+                  max="100"
+                  value={fontSize}
+                  onChange={(e) => setFontSize(parseInt(e.target.value))}
+                  className="h-10 w-full cursor-pointer accent-[var(--accent)]"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold tracking-wide text-[var(--text-2)] uppercase">Position</label>
+                <div className="flex h-10 w-full overflow-hidden rounded-lg border border-[var(--border-2)] bg-[var(--bg)] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setPosition("bottom")}
+                    className={`flex-1 rounded-md text-sm font-medium transition ${position === 'bottom' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-2)] hover:text-[var(--text-1)]'}`}
+                    disabled={isLoading}
+                  >
+                    Bottom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPosition("top")}
+                    className={`flex-1 rounded-md text-sm font-medium transition ${position === 'top' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-2)] hover:text-[var(--text-1)]'}`}
+                    disabled={isLoading}
+                  >
+                    Top
+                  </button>
+                </div>
+              </div>
+
+            </div>
           </form>
 
           {isLoading ? (
