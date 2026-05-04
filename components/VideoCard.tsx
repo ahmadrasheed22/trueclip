@@ -126,6 +126,22 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
   const handleDownload = async () => {
     if (downloadState === "loading") return;
 
+    if (video.mp4_url) {
+      setDownloadState("loading");
+      window.location.assign(video.mp4_url);
+      window.setTimeout(() => setDownloadState("idle"), 1500);
+      return;
+    }
+
+    const backendBaseUrl = process.env.NEXT_PUBLIC_CLIP_BACKEND_URL?.trim();
+    if (backendBaseUrl) {
+      setDownloadState("loading");
+      const encodedTitle = encodeURIComponent(video.title || video.videoId);
+      window.location.assign(`${backendBaseUrl}/download/youtube/${video.videoId}?title=${encodedTitle}`);
+      window.setTimeout(() => setDownloadState("idle"), 1500);
+      return;
+    }
+
     setDownloadState("loading");
 
     try {

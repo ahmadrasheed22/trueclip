@@ -330,7 +330,7 @@ export default function GeneratePage() {
                     </p>
 
                     <a
-                      href={clip.videoUrl}
+                      href={clip.downloadUrl ?? clip.videoUrl}
                       download
                       className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-[var(--border-2)] bg-[var(--bg)] px-4 text-sm font-semibold text-[var(--text-1)] transition hover:border-[var(--accent)] hover:text-[var(--accent-2)]"
                     >

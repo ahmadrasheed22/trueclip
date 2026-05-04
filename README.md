@@ -32,6 +32,7 @@ Clip generation values:
 - `CLIP_BACKEND_URL` (example: `http://127.0.0.1:8000`)
 - `CLIP_BACKEND_FALLBACK_URLS` (optional, comma/space-separated fallback backend URLs)
 - `CLIP_BACKEND_MAX_ATTEMPTS` (optional, default `3`)
+- `NEXT_PUBLIC_CLIP_BACKEND_URL` (optional, public backend URL for direct clip downloads)
 
 Optional yt-dlp authentication values (recommended when YouTube returns bot-check errors):
 

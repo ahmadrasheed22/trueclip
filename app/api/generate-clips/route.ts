@@ -232,6 +232,7 @@ function normalizeClip(rawClip: unknown, fallbackIndex: number): Clip | null {
 
   const idRaw = source.id;
   const videoUrlRaw = source.videoUrl;
+  const downloadUrlRaw = source.downloadUrl;
   const subtitleRaw = source.subtitle;
 
   if (typeof videoUrlRaw !== "string" || !videoUrlRaw.trim()) {
@@ -244,6 +245,10 @@ function normalizeClip(rawClip: unknown, fallbackIndex: number): Clip | null {
         ? idRaw
         : `clip-${fallbackIndex + 1}`,
     videoUrl: videoUrlRaw,
+    downloadUrl:
+      typeof downloadUrlRaw === "string" && downloadUrlRaw.trim()
+        ? downloadUrlRaw
+        : undefined,
     duration: toNumber(source.duration),
     subtitle: typeof subtitleRaw === "string" ? subtitleRaw : "",
     startTime: toNumber(source.startTime),
