@@ -3,6 +3,7 @@ import crypto from "crypto";
 const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
 const TIKTOK_API_BASE_URL = "https://open.tiktokapis.com/v2";
 // Keep defaults review-friendly for Login Kit; add video.publish via TIKTOK_SCOPE when needed.
+// Reminder: enable the Content Posting product in the TikTok Developer Portal before using video.publish.
 const DEFAULT_SCOPE = "user.info.basic";
 
 export type TikTokUserProfile = {
@@ -70,12 +71,27 @@ function getRequiredEnv(name: string): string {
   return value;
 }
 
+function normalizeScope(rawScope: string | undefined) {
+  const cleaned = rawScope?.trim();
+  if (!cleaned) {
+    return "";
+  }
+
+  return cleaned
+    .split(/[\s,]+/)
+    .map((scope) => scope.trim())
+    .filter(Boolean)
+    .join(",");
+}
+
 export function getTikTokConfig() {
+  const normalizedScope = normalizeScope(process.env.TIKTOK_SCOPE);
+
   return {
     clientKey: getRequiredEnv("TIKTOK_CLIENT_KEY"),
     clientSecret: getRequiredEnv("TIKTOK_CLIENT_SECRET"),
     redirectUri: getRequiredEnv("TIKTOK_REDIRECT_URI"),
-    scope: process.env.TIKTOK_SCOPE?.trim() || DEFAULT_SCOPE,
+    scope: normalizedScope || DEFAULT_SCOPE,
   };
 }
 

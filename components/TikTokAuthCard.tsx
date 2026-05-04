@@ -19,6 +19,7 @@ type TikTokAuthCardProps = {
   isCheckingSession: boolean;
   onUserChange: (user: TikTokUser | null) => void;
   onNotice: (notice: TikTokNotice) => void;
+  needsReconnect?: boolean;
 };
 
 export default function TikTokAuthCard({
@@ -26,6 +27,7 @@ export default function TikTokAuthCard({
   isCheckingSession,
   onUserChange,
   onNotice,
+  needsReconnect = false,
 }: TikTokAuthCardProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -116,6 +118,19 @@ export default function TikTokAuthCard({
               {isLoggingOut ? "Logging out..." : "Logout"}
             </button>
           </div>
+
+          {needsReconnect ? (
+            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+              <p>Reconnect your TikTok account to enable video posting.</p>
+              <button
+                type="button"
+                onClick={handleLogin}
+                className="mt-2 inline-flex items-center justify-center rounded-md bg-amber-500/80 px-3 py-1 text-xs font-semibold text-black transition hover:bg-amber-400"
+              >
+                Reconnect TikTok
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

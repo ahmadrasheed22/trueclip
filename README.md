@@ -49,7 +49,8 @@ Also ensure your TikTok app has this redirect URI registered in TikTok Developer
 Notes:
 
 - `TIKTOK_SCOPE` defaults to `user.info.basic` for Login Kit review.
-- Add `video.publish` to `TIKTOK_SCOPE` only when Content Posting is enabled in TikTok Developer Portal.
+- For posting, set `TIKTOK_SCOPE=user.info.basic,video.publish` and enable the Content Posting product in the TikTok Developer Portal.
+- After adding `video.publish`, users must reconnect their TikTok account to refresh the session scope.
 - Legacy callback path `/api/auth/tiktok/callback` is still supported and forwards to `/api/tiktok/callback`.
 - Set only one of `YTDLP_COOKIES_FROM_BROWSER` or `YTDLP_COOKIES_FILE`.
 - Ensure your clip backend can run yt-dlp JavaScript extraction (for example with `--js-runtimes node`) or some videos will fail.

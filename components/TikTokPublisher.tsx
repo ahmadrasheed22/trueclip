@@ -11,7 +11,19 @@ import TikTokPostCard from "@/components/TikTokPostCard";
 type SessionResponse = {
   authenticated: boolean;
   user?: TikTokUser;
+  scope?: string;
 };
+
+function hasScope(scopeValue: string | undefined, requiredScope: string): boolean {
+  if (!scopeValue) {
+    return false;
+  }
+
+  return scopeValue
+    .split(",")
+    .map((scopeItem) => scopeItem.trim())
+    .includes(requiredScope);
+}
 
 function getNoticeClass(type: TikTokNotice["type"]) {
   if (type === "success") {
@@ -32,6 +44,7 @@ export default function TikTokPublisher() {
 
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [user, setUser] = useState<TikTokUser | null>(null);
+  const [sessionScope, setSessionScope] = useState("");
   const [notice, setNotice] = useState<TikTokNotice | null>(null);
 
   useEffect(() => {
@@ -75,12 +88,15 @@ export default function TikTokPublisher() {
 
         if (!response.ok || !payload?.authenticated || !payload.user) {
           setUser(null);
+          setSessionScope("");
           return;
         }
 
         setUser(payload.user);
+        setSessionScope(payload.scope || "");
       } catch {
         setUser(null);
+        setSessionScope("");
       } finally {
         setIsCheckingSession(false);
       }
@@ -115,8 +131,14 @@ export default function TikTokPublisher() {
         <TikTokAuthCard
           user={user}
           isCheckingSession={isCheckingSession}
-          onUserChange={setUser}
+          onUserChange={(nextUser) => {
+            setUser(nextUser);
+            if (!nextUser) {
+              setSessionScope("");
+            }
+          }}
           onNotice={setNotice}
+          needsReconnect={Boolean(user && !hasScope(sessionScope, "video.publish"))}
         />
         <TikTokPostCard user={user} />
       </div>

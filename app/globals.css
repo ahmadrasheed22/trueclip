@@ -944,6 +944,41 @@ a {
   color: var(--red);
 }
 
+.download-btn__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.download-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: download-spin 0.8s linear infinite;
+}
+
+.download-msg {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.download-msg--error {
+  color: var(--red);
+}
+
+@keyframes download-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .tiktok-login-btn {
   display: inline-flex;
   align-items: center;

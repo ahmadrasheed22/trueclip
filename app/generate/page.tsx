@@ -46,6 +46,23 @@ function readGenerateError(payload: unknown): string | null {
   return null;
 }
 
+function resolveClipDownloadUrl(clip: Clip): string {
+  if (clip.downloadUrl && clip.downloadUrl.trim()) {
+    return clip.downloadUrl.trim();
+  }
+
+  const videoUrl = clip.videoUrl?.trim();
+  if (!videoUrl) {
+    return "";
+  }
+
+  if (videoUrl.includes("/clips/")) {
+    return videoUrl.replace("/clips/", "/download/");
+  }
+
+  return videoUrl;
+}
+
 export default function GeneratePage() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -330,7 +347,7 @@ export default function GeneratePage() {
                     </p>
 
                     <a
-                      href={clip.downloadUrl ?? clip.videoUrl}
+                      href={resolveClipDownloadUrl(clip)}
                       download
                       className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-[var(--border-2)] bg-[var(--bg)] px-4 text-sm font-semibold text-[var(--text-1)] transition hover:border-[var(--accent)] hover:text-[var(--accent-2)]"
                     >

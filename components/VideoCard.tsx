@@ -58,9 +58,54 @@ export function timeAgo(dateString: string | undefined | null) {
   return `${Math.floor(diff / 31536000)} years ago`;
 }
 
+function sanitizeFilename(value: string) {
+  return value.replace(/[\\/:*?"<>|]+/g, "").trim();
+}
+
+function readFilenameFromDisposition(header: string | null) {
+  if (!header) return null;
+
+  const utfMatch = header.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utfMatch && utfMatch[1]) {
+    try {
+      return decodeURIComponent(utfMatch[1]);
+    } catch {
+      return utfMatch[1];
+    }
+  }
+
+  const asciiMatch = header.match(/filename="?([^";]+)"?/i);
+  return asciiMatch?.[1] ?? null;
+}
+
+function resolveDownloadUrl(video: VideoItem) {
+  if (video.mp4_url) {
+    return video.mp4_url;
+  }
+
+  const backendBaseUrl = process.env.NEXT_PUBLIC_CLIP_BACKEND_URL?.trim();
+  if (backendBaseUrl) {
+    try {
+      const url = new URL(`/download/youtube/${video.videoId}`, backendBaseUrl);
+      url.searchParams.set("title", video.title || video.videoId);
+      return url.toString();
+    } catch {
+      // Fall through to the Next.js download route.
+    }
+  }
+
+  const fallback = new URLSearchParams({
+    videoId: video.videoId,
+    title: video.title || video.videoId,
+  });
+
+  return `/api/download?${fallback.toString()}`;
+}
+
 export default function VideoCard({ video, onPlay }: VideoCardProps) {
   const videoId = video.videoId;
   const [downloadState, setDownloadState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [downloadMessage, setDownloadMessage] = useState("");
   const [stats, setStats] = useState({
     views: String(video.viewCount ?? "0"),
     likes: String(video.likeCount ?? "0"),
@@ -125,48 +170,45 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
 
   const handleDownload = async () => {
     if (downloadState === "loading") return;
-
-    if (video.mp4_url) {
-      setDownloadState("loading");
-      window.location.assign(video.mp4_url);
-      window.setTimeout(() => setDownloadState("idle"), 1500);
-      return;
-    }
-
-    const backendBaseUrl = process.env.NEXT_PUBLIC_CLIP_BACKEND_URL?.trim();
-    if (backendBaseUrl) {
-      setDownloadState("loading");
-      const encodedTitle = encodeURIComponent(video.title || video.videoId);
-      window.location.assign(`${backendBaseUrl}/download/youtube/${video.videoId}?title=${encodedTitle}`);
-      window.setTimeout(() => setDownloadState("idle"), 1500);
-      return;
-    }
-
     setDownloadState("loading");
+    setDownloadMessage("");
+
+    const downloadUrl = resolveDownloadUrl(video);
 
     try {
-      const response = await fetch(
-        `/api/download?videoId=${video.videoId}&title=${encodeURIComponent(video.title)}`
-      );
-
+      const response = await fetch(downloadUrl, { cache: "no-store" });
       if (!response.ok) {
-        throw new Error("Failed");
+        const payload = await response.json().catch(() => null);
+        const message = payload?.error || "Download failed. Please try again.";
+        throw new Error(message);
       }
 
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${video.title || video.videoId}.mp4`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const fallbackName = sanitizeFilename(video.title || video.videoId || "short");
+      const filename =
+        readFilenameFromDisposition(response.headers.get("content-disposition")) ||
+        `${fallbackName}.mp4`;
+
+      const objectUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      window.URL.revokeObjectURL(objectUrl);
+
       setDownloadState("success");
-    } catch {
+      setDownloadMessage("Download started.");
+    } catch (errorCause) {
       setDownloadState("error");
+      setDownloadMessage(
+        errorCause instanceof Error
+          ? errorCause.message
+          : "Download failed. Please try again."
+      );
     } finally {
-      window.setTimeout(() => setDownloadState("idle"), 2000);
+      window.setTimeout(() => setDownloadState("idle"), 2500);
     }
   };
 
@@ -256,8 +298,19 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
         </div>
 
         <button type="button" className={buttonClassName} onClick={handleDownload} disabled={downloadState === "loading"}>
-          {buttonText}
+          <span className="download-btn__label">
+            {downloadState === "loading" ? (
+              <span className="download-spinner" aria-hidden="true" />
+            ) : null}
+            {buttonText}
+          </span>
         </button>
+
+        {downloadMessage ? (
+          <p className={downloadState === "error" ? "download-msg download-msg--error" : "download-msg"}>
+            {downloadMessage}
+          </p>
+        ) : null}
 
         <TikTokRepostButton videoUrl={repostVideoUrl} title={video.title} />
       </div>
