@@ -83,17 +83,6 @@ function resolveDownloadUrl(video: VideoItem) {
     return video.mp4_url;
   }
 
-  const backendBaseUrl = process.env.NEXT_PUBLIC_CLIP_BACKEND_URL?.trim();
-  if (backendBaseUrl) {
-    try {
-      const url = new URL(`/download/youtube/${video.videoId}`, backendBaseUrl);
-      url.searchParams.set("title", video.title || video.videoId);
-      return url.toString();
-    } catch {
-      // Fall through to the Next.js download route.
-    }
-  }
-
   const fallback = new URLSearchParams({
     videoId: video.videoId,
     title: video.title || video.videoId,
