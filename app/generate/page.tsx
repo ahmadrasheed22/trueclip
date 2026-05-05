@@ -361,9 +361,8 @@ export default function GeneratePage() {
         ) : null}
 
         {!isLoading && !error && hasSearched && clips.length === 0 ? (
-          <section className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--bg-2)] p-5 text-sm text-[var(--text-2)]">
-            No clips were generated for this video. Try a different YouTube URL with stronger
-            moments.
+          <section className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--bg-2)] p-5 text-sm text-[var(--border-2)] text-center font-medium">
+            <span className="inline-block animate-pulse">Generating your clips in the background... this may take a moment.</span>
           </section>
         ) : null}
       </div>
