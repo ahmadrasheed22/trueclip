@@ -518,7 +518,7 @@ export default function HomePage({ searchParams }: HomePageProps) {
 
             <p className="hero-subtitle">
               Paste a channel name, @handle, or URL {"\u2014"} instantly browse
-              and download their Shorts in MP4. Trueclip empowers creators to effortlessly find, monitor, and save YouTube Shorts for seamless workflow integrations like TikTok sharing.
+              and download their Shorts in MP4.
             </p>
 
             <form className="hero-search" onSubmit={handleSearch}>
@@ -566,27 +566,25 @@ export default function HomePage({ searchParams }: HomePageProps) {
 
             {searchError ? <p className="inline-error">{searchError}</p> : null}
 
-            <div className="about-section" style={{ marginTop: "4rem", textAlign: "left", maxWidth: "800px", margin: "4rem auto 0" }}>
-              <h2 className="heading-font" style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>What is Trueclip?</h2>
-              <p style={{ color: "var(--color-text-dim)" }}>
-                Trueclip is an advanced short-form video discovery and monitoring tool designed for content creators and marketers. 
-                Our platform allows you to keep track of the latest YouTube Shorts from your favorite channels in real time. 
-                With built-in TikTok API integration, Trueclip streamlines your workflow by enabling you to process, download, 
-                and syndicate video content rapidly across platforms without manual downloading friction.
+            {/* New Features / About Section to satisfy TikTok Review */}
+            <div className="mt-20 max-w-4xl mx-auto text-left border-t border-zinc-800 pt-16">
+              <h2 className="text-3xl font-bold text-white mb-6">About Trueclip</h2>
+              <p className="text-zinc-300 text-lg mb-10 leading-relaxed">
+                Trueclip is a powerful discovery tool designed to help creators, marketers, and fans find and track YouTube Shorts from any channel instantly. By deeply integrating with both the YouTube and TikTok platforms, it unlocks seamless cross-platform workflows.
               </p>
               
-              <div style={{ display: "flex", gap: "2rem", marginTop: "2rem" }}>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ display: "block", marginBottom: "0.5rem" }}>{"\u{26A1}"} Real-time Monitoring</strong>
-                  <p style={{ color: "var(--color-text-dim)", fontSize: "0.875rem" }}>Stay updated with new Shorts as soon as they go live on YouTube.</p>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl">
+                  <h3 className="text-xl font-semibold text-white mb-3">🔍 Instant Discovery</h3>
+                  <p className="text-zinc-400">Search by handle, URL, or channel name to instantly pull up an unrestricted feed of their latest Shorts.</p>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ display: "block", marginBottom: "0.5rem" }}>{"\u{1F4E5}"} Instant Downloads</strong>
-                  <p style={{ color: "var(--color-text-dim)", fontSize: "0.875rem" }}>Download high-quality MP4 files safely with a single click.</p>
+                <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl">
+                  <h3 className="text-xl font-semibold text-white mb-3">📥 Direct Downloads</h3>
+                  <p className="text-zinc-400">Download high-quality MP4 files directly to your device with a single click, ready for your next project.</p>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ display: "block", marginBottom: "0.5rem" }}>{"\u{1F310}"} TikTok Ready</strong>
-                  <p style={{ color: "var(--color-text-dim)", fontSize: "0.875rem" }}>Connect your accounts and automate your cross-platform strategy effortlessly.</p>
+                <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl">
+                  <h3 className="text-xl font-semibold text-white mb-3">⚡ Seamless Integrations</h3>
+                  <p className="text-zinc-400">Connect with your TikTok account securely to directly push or repurpose content without manually switching apps.</p>
                 </div>
               </div>
             </div>
