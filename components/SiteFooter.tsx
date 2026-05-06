@@ -9,19 +9,18 @@ export default function SiteFooter() {
         </p>
 
         <nav
-          className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-3"
+          className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
           aria-label="Legal links"
         >
           <Link
             href="/privacy"
-            className="text-sm font-semibold text-zinc-400 transition hover:text-zinc-100"
+            className="text-lg font-semibold text-zinc-100 transition hover:text-indigo-300"
           >
             Privacy Policy
           </Link>
-          <span className="text-zinc-600">|</span>
           <Link
             href="/terms"
-            className="text-sm font-semibold text-zinc-400 transition hover:text-zinc-100"
+            className="text-lg font-semibold text-zinc-100 transition hover:text-indigo-300"
           >
             Terms of Service
           </Link>
