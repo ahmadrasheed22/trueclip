@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description:
     "Search any YouTube channel and instantly browse and download their Shorts.",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
     apple: "/trueclip_icon_1024x1024.png",
   },
   other: {
@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" sizes="any" />
         <link rel="icon" type="image/png" href="/trueclip_icon_1024x1024.png" />
         <link rel="apple-touch-icon" href="/trueclip_icon_1024x1024.png" />
       </head>
