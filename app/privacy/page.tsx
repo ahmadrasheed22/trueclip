@@ -18,6 +18,9 @@ export default function PrivacyPage() {
       lastUpdated="May 5, 2026"
       contactEmail="ahmad22rasheed22@gmail.com"
     >
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <img src="/favicon.ico" alt="Trueclip Logo" width={80} height={80} />
+      </div>
       <LegalNumberedSection index={1}>
         <strong>Information We Collect:</strong> We collect specific information to provide our services. 
         When you connect your TikTok account, we collect your TikTok username, avatar, open ID, and access tokens. 

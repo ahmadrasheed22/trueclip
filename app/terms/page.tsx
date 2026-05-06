@@ -18,6 +18,9 @@ export default function TermsPage() {
       lastUpdated="May 5, 2026"
       contactEmail="ahmad22rasheed22@gmail.com"
     >
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+        <img src="/favicon.ico" alt="Trueclip Logo" width={80} height={80} />
+      </div>
       <LegalNumberedSection index={1}>
         <strong>Welcome to Trueclip:</strong> Trueclip is a service that provides YouTube Shorts discovery features 
         and TikTok integrations for workflows. By accessing or using our service, you agree to be bound by these 
