@@ -18,8 +18,8 @@ export default function TermsPage() {
       lastUpdated="May 5, 2026"
       contactEmail="ahmad22rasheed22@gmail.com"
     >
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-        <img src="/favicon.ico" alt="Trueclip Logo" width={80} height={80} />
+      <div className="flex justify-center mb-8">
+        <img src="/trueclip_icon_1024x1024.png" alt="Trueclip" width={80} height={80} />
       </div>
       <LegalNumberedSection index={1}>
         <strong>Welcome to Trueclip:</strong> Trueclip is a service that provides YouTube Shorts discovery features 

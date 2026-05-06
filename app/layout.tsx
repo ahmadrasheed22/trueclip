@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "Trueclip - YouTube Shorts Tracker",
   description:
     "Search any YouTube channel and instantly browse and download their Shorts.",
+  icons: {
+    icon: "/trueclip_icon_1024x1024.png",
+  },
   other: {
     "tiktok-developers-site-verification": "WBEkGL12zExpGgfUqlhy5QdIEH0htJZH",
   },
