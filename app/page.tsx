@@ -518,7 +518,7 @@ export default function HomePage({ searchParams }: HomePageProps) {
 
             <p className="hero-subtitle">
               Paste a channel name, @handle, or URL {"\u2014"} instantly browse
-              and download their Shorts in MP4.
+              and download their Shorts in MP4. Trueclip empowers creators to effortlessly find, monitor, and save YouTube Shorts for seamless workflow integrations like TikTok sharing.
             </p>
 
             <form className="hero-search" onSubmit={handleSearch}>
@@ -565,6 +565,31 @@ export default function HomePage({ searchParams }: HomePageProps) {
             />
 
             {searchError ? <p className="inline-error">{searchError}</p> : null}
+
+            <div className="about-section" style={{ marginTop: "4rem", textAlign: "left", maxWidth: "800px", margin: "4rem auto 0" }}>
+              <h2 className="heading-font" style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>What is Trueclip?</h2>
+              <p style={{ color: "var(--color-text-dim)" }}>
+                Trueclip is an advanced short-form video discovery and monitoring tool designed for content creators and marketers. 
+                Our platform allows you to keep track of the latest YouTube Shorts from your favorite channels in real time. 
+                With built-in TikTok API integration, Trueclip streamlines your workflow by enabling you to process, download, 
+                and syndicate video content rapidly across platforms without manual downloading friction.
+              </p>
+              
+              <div style={{ display: "flex", gap: "2rem", marginTop: "2rem" }}>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ display: "block", marginBottom: "0.5rem" }}>{"\u{26A1}"} Real-time Monitoring</strong>
+                  <p style={{ color: "var(--color-text-dim)", fontSize: "0.875rem" }}>Stay updated with new Shorts as soon as they go live on YouTube.</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ display: "block", marginBottom: "0.5rem" }}>{"\u{1F4E5}"} Instant Downloads</strong>
+                  <p style={{ color: "var(--color-text-dim)", fontSize: "0.875rem" }}>Download high-quality MP4 files safely with a single click.</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ display: "block", marginBottom: "0.5rem" }}>{"\u{1F310}"} TikTok Ready</strong>
+                  <p style={{ color: "var(--color-text-dim)", fontSize: "0.875rem" }}>Connect your accounts and automate your cross-platform strategy effortlessly.</p>
+                </div>
+              </div>
+            </div>
           </section>
         ) : showUrlLoading ? (
           <section className="channel-view">
