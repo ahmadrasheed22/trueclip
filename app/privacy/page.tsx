@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import LegalPageLayout, {
   LegalNumberedSection,
   legalLinkClassName,
@@ -15,11 +16,11 @@ export default function PrivacyPage() {
     <LegalPageLayout
       title="Privacy Policy"
       siteLabel="Trueclip (trueclip.vercel.app)"
-      lastUpdated="May 5, 2026"
+      lastUpdated="May 7, 2026"
       contactEmail="ahmad22rasheed22@gmail.com"
     >
       <div className="flex justify-center mb-8">
-        <img src="/trueclip_icon_1024x1024.png" alt="Trueclip" width={80} height={80} />
+        <Image src="/trueclip_icon_1024x1024.png" alt="Trueclip" width={80} height={80} />
       </div>
       <LegalNumberedSection index={1}>
         <strong>Information We Collect:</strong> We collect specific information to provide our services. 
