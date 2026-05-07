@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import TikTokLogin from "@/components/TikTokLogin";
@@ -30,9 +31,18 @@ export default function Navbar({ syneFont }: NavbarProps) {
               <span />
             </button>
 
-            <Link href="/" className={`logo ${syneFont}`} aria-label="Trueclip home">
-              <span className="logo-true">true</span>
-              <span className="logo-clip">clip</span>
+            <Link href="/" className={`logo flex items-center gap-2 ${syneFont}`} aria-label="Trueclip home">
+              <Image 
+                src="/trueclip_icon_1024x1024.png" 
+                alt="Trueclip Icon" 
+                width={32} 
+                height={32} 
+                className="rounded-lg"
+              />
+              <div>
+                <span className="logo-true">true</span>
+                <span className="logo-clip">clip</span>
+              </div>
             </Link>
           </div>
 
