@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "TikTok requires your video URL domain to be verified for PULL_FROM_URL uploads.",
+            "TikTok requires your video URL domain to be verified for PULL_FROM_URL uploads. This shouldn't happen with FILE_UPLOAD.",
         },
         { status: 400 }
       );

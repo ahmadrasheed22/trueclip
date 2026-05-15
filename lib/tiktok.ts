@@ -376,6 +376,25 @@ export async function publishTikTokVideoFromUrl(
 ): Promise<PublishResponse> {
   const creatorInfo = await queryTikTokCreatorInfo(accessToken);
 
+  // 1. Download the video file from the URL
+  const videoResponse = await fetch(videoUrl);
+  if (!videoResponse.ok) {
+    throw new Error(`Failed to download video from URL: ${videoResponse.status} ${videoResponse.statusText}`);
+  }
+  const arrayBuffer = await videoResponse.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const videoSize = buffer.length;
+
+  const maxChunkSize = 64 * 1024 * 1024; // 64 MB
+  let chunkSize = videoSize;
+  let totalChunkCount = 1;
+
+  if (videoSize > maxChunkSize) {
+    chunkSize = maxChunkSize;
+    totalChunkCount = Math.ceil(videoSize / chunkSize);
+  }
+
+  // 2. Initialize the file upload with TikTok
   const response = await fetch(`${TIKTOK_API_BASE_URL}/post/publish/video/init/`, {
     method: "POST",
     headers: {
@@ -391,8 +410,10 @@ export async function publishTikTokVideoFromUrl(
         disable_stitch: creatorInfo.stitchDisabled,
       },
       source_info: {
-        source: "PULL_FROM_URL",
-        video_url: videoUrl,
+        source: "FILE_UPLOAD",
+        video_size: videoSize,
+        chunk_size: chunkSize,
+        total_chunk_count: totalChunkCount,
       },
     }),
     cache: "no-store",
@@ -413,9 +434,32 @@ export async function publishTikTokVideoFromUrl(
 
   const data = asRecord(root?.data);
   const publishId = typeof data?.publish_id === "string" ? data.publish_id : "";
+  const uploadUrl = typeof data?.upload_url === "string" ? data.upload_url : "";
 
-  if (!publishId) {
-    throw new TikTokApiError("TikTok did not return publish_id for this request.", 500);
+  if (!publishId || !uploadUrl) {
+    throw new TikTokApiError("TikTok did not return publish_id or upload_url for this request.", 500);
+  }
+
+  // 3. Upload chunks to the uploadUrl directly
+  for (let i = 0; i < totalChunkCount; i++) {
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, videoSize);
+    const chunk = buffer.subarray(start, end);
+    const contentRange = `bytes ${start}-${end - 1}/${videoSize}`;
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Length": chunk.length.toString(),
+        "Content-Range": contentRange,
+      },
+      body: chunk,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to upload chunk ${i + 1} to TikTok: ${uploadResponse.statusText}`);
+    }
   }
 
   return {

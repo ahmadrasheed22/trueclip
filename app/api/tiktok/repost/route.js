@@ -14,6 +14,25 @@ export async function POST(request) {
       return NextResponse.json({ error: "access_token and video_url are required." }, { status: 400 });
     }
 
+    // 1. Download the video from URL
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) {
+      return NextResponse.json({ error: `Failed to download video: ${videoResponse.statusText}` }, { status: 400 });
+    }
+    
+    const arrayBuffer = await videoResponse.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const videoSize = buffer.length;
+
+    const maxChunkSize = 64 * 1024 * 1024; // 64 MB
+    let chunkSize = videoSize;
+    let totalChunkCount = 1;
+
+    if (videoSize > maxChunkSize) {
+      chunkSize = maxChunkSize;
+      totalChunkCount = Math.ceil(videoSize / chunkSize);
+    }
+
     const repostPayload = {
       post_info: {
         title,
@@ -23,8 +42,10 @@ export async function POST(request) {
         disable_stitch: false,
       },
       source_info: {
-        source: "PULL_FROM_URL",
-        video_url: videoUrl,
+        source: "FILE_UPLOAD",
+        video_size: videoSize,
+        chunk_size: chunkSize,
+        total_chunk_count: totalChunkCount,
       },
     };
 
@@ -51,12 +72,39 @@ export async function POST(request) {
     }
 
     const publishId = payload?.data?.publish_id || payload?.publish_id || "";
+    const uploadUrl = payload?.data?.upload_url || payload?.upload_url || "";
+
+    if (!publishId || !uploadUrl) {
+      return NextResponse.json({ error: "TikTok returned valid init response but missing publish_id or upload_url." }, { status: 500 });
+    }
+
+    // Upload chunks to the uploadUrl directly
+    for (let i = 0; i < totalChunkCount; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, videoSize);
+      const chunk = buffer.subarray(start, end);
+      const contentRange = `bytes ${start}-${end - 1}/${videoSize}`;
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "video/mp4",
+          "Content-Length": chunk.length.toString(),
+          "Content-Range": contentRange,
+        },
+        body: chunk,
+      });
+
+      if (!uploadResponse.ok) {
+        return NextResponse.json({ error: `Failed to upload chunk ${i + 1} to TikTok: ${uploadResponse.statusText}` }, { status: 500 });
+      }
+    }
 
     return NextResponse.json({
       success: true,
       publish_id: publishId,
     });
-  } catch {
-    return NextResponse.json({ error: "Unable to repost video to TikTok." }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: "Unable to repost video to TikTok. " + (error.message || "") }, { status: 500 });
   }
 }
