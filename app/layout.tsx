@@ -17,9 +17,9 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "Trueclip - YouTube Shorts Tracker",
+  title: "Trueclip",
   description:
-    "Search any YouTube channel and instantly browse and download their Shorts.",
+    "Trueclip helps creators discover trending short-form content for inspiration and manage their own video uploads to TikTok.",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",

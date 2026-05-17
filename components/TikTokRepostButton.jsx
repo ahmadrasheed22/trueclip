@@ -75,7 +75,7 @@ export default function TikTokRepostButton({ videoUrl, title }) {
         },
         body: JSON.stringify({
           videoUrl: absoluteVideoUrl,
-          captionSeed: title || "Posted from Trueclip",
+          captionSeed: title || "My latest short is live",
         }),
       });
 
@@ -87,15 +87,14 @@ export default function TikTokRepostButton({ videoUrl, title }) {
           setUser(null);
         }
 
-        throw new Error(payload?.error || "Unable to repost right now.");
+        throw new Error(payload?.error || "Unable to post right now.");
       }
 
       setState("success");
-      const publishId = payload?.publishId || "n/a";
-      setMessage(`Posted successfully to TikTok. Publish ID: ${publishId}.`);
+      setMessage(`Your video is being processed. It may take a few minutes to appear on your TikTok profile.`);
     } catch (errorCause) {
       setState("error");
-      setMessage(errorCause instanceof Error ? errorCause.message : "Unable to repost right now.");
+      setMessage(errorCause instanceof Error ? errorCause.message : "Unable to post right now.");
     }
   };
 
@@ -106,7 +105,7 @@ export default function TikTokRepostButton({ videoUrl, title }) {
         ? "Posted! ✅"
         : state === "error"
           ? "Retry ↗"
-          : "Repost to TikTok ↗";
+          : "Post to TikTok ↗";
 
   const buttonClassName = [
     "tiktok-repost-btn",
@@ -125,7 +124,7 @@ export default function TikTokRepostButton({ videoUrl, title }) {
         disabled={!isConnected || state === "loading"}
         onClick={handleRepost}
       >
-        {isConnected ? buttonText : "Connect TikTok to repost"}
+        {isConnected ? buttonText : "Connect TikTok to post"}
       </button>
 
       {message ? (

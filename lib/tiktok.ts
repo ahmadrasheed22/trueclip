@@ -322,14 +322,17 @@ type PublishResponse = {
   logId?: string;
 };
 
-type CreatorInfo = {
-  privacyLevel: string;
-  commentDisabled: boolean;
-  duetDisabled: boolean;
-  stitchDisabled: boolean;
+export type CreatorInfoResponse = {
+  creator_avatar_url: string;
+  creator_nickname: string;
+  privacy_level_options: string[];
+  comment_disabled: boolean;
+  duet_disabled: boolean;
+  stitch_disabled: boolean;
+  max_video_post_duration_sec: number;
 };
 
-async function queryTikTokCreatorInfo(accessToken: string): Promise<CreatorInfo> {
+export async function queryTikTokCreatorInfoDirect(accessToken: string): Promise<CreatorInfoResponse> {
   const response = await fetch(`${TIKTOK_API_BASE_URL}/post/publish/creator_info/query/`, {
     method: "POST",
     headers: {
@@ -352,30 +355,29 @@ async function queryTikTokCreatorInfo(accessToken: string): Promise<CreatorInfo>
     throw createApiError(payload, 400, "TikTok creator settings query failed.");
   }
 
-  const data = asRecord(root?.data);
-  const privacyOptions = Array.isArray(data?.privacy_level_options)
-    ? data?.privacy_level_options.filter((item): item is string => typeof item === "string")
-    : [];
-
-  const privacyLevel = privacyOptions.includes("SELF_ONLY")
-    ? "SELF_ONLY"
-    : privacyOptions[0] || "SELF_ONLY";
-
+  const data = root?.data as Record<string, unknown>;
   return {
-    privacyLevel,
-    commentDisabled: Boolean(data?.comment_disabled),
-    duetDisabled: Boolean(data?.duet_disabled),
-    stitchDisabled: Boolean(data?.stitch_disabled),
+    creator_avatar_url: (data?.creator_avatar_url as string) || "",
+    creator_nickname: (data?.creator_nickname as string) || "",
+    privacy_level_options: (data?.privacy_level_options as string[]) || [],
+    comment_disabled: Boolean(data?.comment_disabled),
+    duet_disabled: Boolean(data?.duet_disabled),
+    stitch_disabled: Boolean(data?.stitch_disabled),
+    max_video_post_duration_sec: (data?.max_video_post_duration_sec as number) || 0,
   };
 }
 
 export async function publishTikTokVideoFromUrl(
   accessToken: string,
   videoUrl: string,
-  caption: string
+  caption: string,
+  privacyLevel: string,
+  disableComment: boolean,
+  disableDuet: boolean,
+  disableStitch: boolean,
+  brandOrganicToggle: boolean,
+  brandContentToggle: boolean
 ): Promise<PublishResponse> {
-  const creatorInfo = await queryTikTokCreatorInfo(accessToken);
-
   // 1. Download the video file from the URL
   const videoResponse = await fetch(videoUrl);
   if (!videoResponse.ok) {
@@ -404,10 +406,12 @@ export async function publishTikTokVideoFromUrl(
     body: JSON.stringify({
       post_info: {
         title: caption,
-        privacy_level: creatorInfo.privacyLevel,
-        disable_comment: creatorInfo.commentDisabled,
-        disable_duet: creatorInfo.duetDisabled,
-        disable_stitch: creatorInfo.stitchDisabled,
+        privacy_level: privacyLevel,
+        disable_comment: disableComment,
+        disable_duet: disableDuet,
+        disable_stitch: disableStitch,
+        brand_content_toggle: brandContentToggle,
+        brand_organic_toggle: brandOrganicToggle,
       },
       source_info: {
         source: "FILE_UPLOAD",

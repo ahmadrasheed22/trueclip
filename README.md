@@ -1,6 +1,6 @@
 # Trueclip
 
-Trueclip is a Next.js App Router project for discovering YouTube Shorts and publishing generated short videos to TikTok.
+Trueclip helps creators discover trending short-form content for inspiration and manage their own video uploads to TikTok.
 
 ## Features
 

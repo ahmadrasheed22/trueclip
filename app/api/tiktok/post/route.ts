@@ -13,6 +13,12 @@ export const dynamic = "force-dynamic";
 type PostRequestBody = {
   videoUrl?: string;
   captionSeed?: string;
+  privacyLevel?: string;
+  disableComment?: boolean;
+  disableDuet?: boolean;
+  disableStitch?: boolean;
+  brandOrganicToggle?: boolean;
+  brandContentToggle?: boolean;
 };
 
 function hasScope(scopeValue: string, requiredScope: string): boolean {
@@ -71,7 +77,17 @@ export async function POST(request: NextRequest) {
     }
 
     const caption = buildTikTokCaption(captionSeed);
-    const publish = await publishTikTokVideoFromUrl(session.accessToken, videoUrl, caption);
+    const publish = await publishTikTokVideoFromUrl(
+      session.accessToken, 
+      videoUrl, 
+      caption,
+      body.privacyLevel || "SELF_ONLY",
+      body.disableComment ?? true,
+      body.disableDuet ?? true,
+      body.disableStitch ?? true,
+      body.brandOrganicToggle ?? false,
+      body.brandContentToggle ?? false
+    );
 
     return NextResponse.json({
       success: true,
