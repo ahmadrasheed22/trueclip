@@ -7,6 +7,7 @@ export type TikTokUser = {
   username: string;
   displayName: string;
   avatarUrl: string;
+  accessToken?: string;
 };
 
 export type TikTokNotice = {

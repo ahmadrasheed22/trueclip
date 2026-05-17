@@ -47,9 +47,9 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
   
   // New States
   const [privacyLevel, setPrivacyLevel] = useState("");
-  const [disableComment, setDisableComment] = useState(true);
-  const [disableDuet, setDisableDuet] = useState(true);
-  const [disableStitch, setDisableStitch] = useState(true);
+  const [allowComment, setAllowComment] = useState(false);
+  const [allowDuet, setAllowDuet] = useState(false);
+  const [allowStitch, setAllowStitch] = useState(false);
   
   const [commercialToggle, setCommercialToggle] = useState(false);
   const [brandOrganicToggle, setBrandOrganicToggle] = useState(false);
@@ -62,7 +62,7 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
 
   useEffect(() => {
     if (user) {
-      fetch("/api/tiktok/creator_info")
+      fetch(`/api/tiktok/creator-info?access_token=${user.accessToken}`)
         .then((res) => res.json())
         .then((data: CreatorInfoResponse) => {
           if (data && data.privacy_level_options) {
@@ -107,9 +107,9 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
           videoUrl,
           captionSeed,
           privacyLevel,
-          disableComment,
-          disableDuet,
-          disableStitch,
+          allowComment,
+          allowDuet,
+          allowStitch,
           brandOrganicToggle,
           brandContentToggle,
         }),
@@ -240,8 +240,8 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
                 <label className="flex items-center space-x-2 text-sm text-zinc-300">
                   <input
                     type="checkbox"
-                    checked={!disableComment}
-                    onChange={(e) => setDisableComment(!e.target.checked)}
+                    checked={allowComment}
+                    onChange={(e) => setAllowComment(e.target.checked)}
                     disabled={isPosting}
                   />
                   <span>Allow Comments</span>
@@ -251,8 +251,8 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
                 <label className="flex items-center space-x-2 text-sm text-zinc-300">
                   <input
                     type="checkbox"
-                    checked={!disableDuet}
-                    onChange={(e) => setDisableDuet(!e.target.checked)}
+                    checked={allowDuet}
+                    onChange={(e) => setAllowDuet(e.target.checked)}
                     disabled={isPosting}
                   />
                   <span>Allow Duet</span>
@@ -262,8 +262,8 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
                 <label className="flex items-center space-x-2 text-sm text-zinc-300">
                   <input
                     type="checkbox"
-                    checked={!disableStitch}
-                    onChange={(e) => setDisableStitch(!e.target.checked)}
+                    checked={allowStitch}
+                    onChange={(e) => setAllowStitch(e.target.checked)}
                     disabled={isPosting}
                   />
                   <span>Allow Stitch</span>
@@ -323,7 +323,7 @@ export default function TikTokPostCard({ user }: TikTokPostCardProps) {
           </>
         ) : null}
 
-        <p className="text-sm text-gray-500 mt-4">
+        <p className="text-sm text-gray-500 mt-4 mb-2">
           By posting, you agree to TikTok&apos;s Music Usage Confirmation
         </p>
 

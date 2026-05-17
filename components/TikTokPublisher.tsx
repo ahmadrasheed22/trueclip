@@ -12,6 +12,7 @@ type SessionResponse = {
   authenticated: boolean;
   user?: TikTokUser;
   scope?: string;
+  accessToken?: string;
 };
 
 function hasScope(scopeValue: string | undefined, requiredScope: string): boolean {
@@ -92,7 +93,7 @@ export default function TikTokPublisher() {
           return;
         }
 
-        setUser(payload.user);
+        setUser({ ...payload.user, accessToken: payload.accessToken });
         setSessionScope(payload.scope || "");
       } catch {
         setUser(null);
