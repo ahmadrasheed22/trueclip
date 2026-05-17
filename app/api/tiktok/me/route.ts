@@ -19,6 +19,7 @@ export async function GET() {
       user: session.user,
       scope: session.scope,
       expiresAt: session.expiresAt,
+      accessToken: session.accessToken,
     });
   } catch (errorCause) {
     if (

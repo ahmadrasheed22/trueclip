@@ -14,9 +14,9 @@ type PostRequestBody = {
   videoUrl?: string;
   captionSeed?: string;
   privacyLevel?: string;
-  disableComment?: boolean;
-  disableDuet?: boolean;
-  disableStitch?: boolean;
+  allowComment?: boolean;
+  allowDuet?: boolean;
+  allowStitch?: boolean;
   brandOrganicToggle?: boolean;
   brandContentToggle?: boolean;
 };
@@ -82,9 +82,9 @@ export async function POST(request: NextRequest) {
       videoUrl, 
       caption,
       body.privacyLevel || "SELF_ONLY",
-      body.disableComment ?? true,
-      body.disableDuet ?? true,
-      body.disableStitch ?? true,
+      !(body.allowComment ?? false),
+      !(body.allowDuet ?? false),
+      !(body.allowStitch ?? false),
       body.brandOrganicToggle ?? false,
       body.brandContentToggle ?? false
     );
