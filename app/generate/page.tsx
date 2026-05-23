@@ -114,14 +114,14 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const response = await axios.post<GenerateResponse>("/api/generate-clips", {
+      const response = await axios.post<GenerateResponse>("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", {
         youtubeUrl: trimmedUrl,
         subtitleStyle,
         highlightColor,
         fontSize,
         position
       }, {
-        timeout: 900000 // 15 minutes
+        timeout: 300000 // 5 minutes
       });
 
       const payload = response.data;

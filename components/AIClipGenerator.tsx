@@ -46,11 +46,11 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
     setClipUrl("");
 
     try {
-      const response = await axios.post<GenerateClipResponse>("/api/generate-clip", {
+      const response = await axios.post<GenerateClipResponse>("https://trueclip-backend-production-e81c.up.railway.app/generate-clip", {
         videoPath,
         prompt: trimmedPrompt
       }, {
-        timeout: 900000 // 15 minutes timeout
+        timeout: 300000 // 5 minutes timeout
       });
 
       const payload = response.data;
