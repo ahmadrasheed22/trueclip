@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import axios from "axios";
 import type { Clip, GenerateResponse } from "@/types/clips";
 
 const PROGRESS_MESSAGES = [
@@ -113,40 +114,35 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const response = await fetch("/api/generate-clips", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          youtubeUrl: trimmedUrl,
-          subtitleStyle,
-          highlightColor,
-          fontSize,
-          position
-        }),
+      const response = await axios.post<GenerateResponse>("/api/generate-clips", {
+        youtubeUrl: trimmedUrl,
+        subtitleStyle,
+        highlightColor,
+        fontSize,
+        position
+      }, {
+        timeout: 300000 // 5 minutes
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | GenerateResponse
-        | null;
-
-      if (!response.ok) {
-        throw new Error(
-          readGenerateError(payload) ??
-            "We could not generate clips right now. Please try again shortly."
-        );
-      }
+      const payload = response.data;
+      console.log("RAW BACKEND RESPONSE:", payload);
 
       const generatedClips = Array.isArray(payload?.clips) ? payload.clips : [];
       setClips(generatedClips);
       setHasSearched(true);
       setActiveProgressIndex(PROGRESS_MESSAGES.length - 1);
     } catch (caughtError) {
-      const message =
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Something unexpected happened while generating clips.";
+      console.error("Clip generation error:", caughtError);
+      
+      let message = "Something unexpected happened while generating clips.";
+      if (axios.isAxiosError(caughtError)) {
+        console.log("RAW BACKEND ERROR RESPONSE:", caughtError.response?.data);
+        message = readGenerateError(caughtError.response?.data) ??
+                  caughtError.message ??
+                  "We could not generate clips right now. Please try again shortly.";
+      } else if (caughtError instanceof Error) {
+        message = caughtError.message;
+      }
 
       setError(message);
       setClips([]);

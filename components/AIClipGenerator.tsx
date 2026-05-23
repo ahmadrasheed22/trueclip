@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import axios from "axios";
 
 type AIClipGeneratorProps = {
   videoPath: string;
@@ -45,23 +46,15 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
     setClipUrl("");
 
     try {
-      const response = await fetch("/api/generate-clip", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ videoPath, prompt: trimmedPrompt }),
+      const response = await axios.post<GenerateClipResponse>("/api/generate-clip", {
+        videoPath,
+        prompt: trimmedPrompt
+      }, {
+        timeout: 300000 // 5 minutes timeout
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | GenerateClipResponse
-        | null;
-
-      if (!response.ok) {
-        throw new Error(
-          getErrorMessage(payload) ?? "Failed to generate clip. Please try again."
-        );
-      }
+      const payload = response.data;
+      console.log("RAW BACKEND RESPONSE (clip):", payload);
 
       if (!payload?.clipUrl) {
         throw new Error("Clip generation finished, but no clip URL was returned.");
@@ -69,10 +62,18 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
 
       setClipUrl(payload.clipUrl);
     } catch (errorCause) {
-      const message =
-        errorCause instanceof Error
-          ? errorCause.message
-          : "Failed to generate clip. Please try again.";
+      console.error("Clip generation error:", errorCause);
+      let message = "Failed to generate clip. Please try again.";
+      
+      if (axios.isAxiosError(errorCause)) {
+        console.log("RAW BACKEND ERROR RES:", errorCause.response?.data);
+        message = getErrorMessage(errorCause.response?.data) ??
+                  errorCause.message ??
+                  "Failed to generate clip. Please try again.";
+      } else if (errorCause instanceof Error) {
+        message = errorCause.message;
+      }
+      
       setError(message);
     } finally {
       setIsLoading(false);
