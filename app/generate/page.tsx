@@ -114,27 +114,66 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const response = await axios.post<GenerateResponse>("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", {
+      const response = await axios.post<{ jobId: string }>("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", {
         youtubeUrl: trimmedUrl,
         subtitleStyle,
         highlightColor,
         fontSize,
         position
       }, {
-        timeout: 300000 // 5 minutes
+        timeout: 30000 // 30 seconds for initial request
       });
 
-      const payload = response.data;
-      console.log("RAW BACKEND RESPONSE:", payload);
+      const { jobId } = response.data;
+      if (!jobId) {
+        throw new Error("Did not receive job ID from server.");
+      }
 
-      const generatedClips = Array.isArray(payload?.clips) ? payload.clips : [];
-      setClips(generatedClips);
-      setHasSearched(true);
-      setActiveProgressIndex(PROGRESS_MESSAGES.length - 1);
+      console.log("Got jobId:", jobId);
+      
+      // Polling
+      const pollStartTime = Date.now();
+      const MAX_POLL_TIME = 10 * 60 * 1000; // 10 minutes
+
+      const pollStatus = async () => {
+        if (Date.now() - pollStartTime > MAX_POLL_TIME) {
+          setError("Clip generation timed out after 10 minutes.");
+          setClips([]);
+          setHasSearched(false);
+          setIsLoading(false);
+          return;
+        }
+
+        try {
+          const statusRes = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
+          const job = statusRes.data;
+
+          if (job.status === 'done') {
+            setClips(job.clips || []);
+            setHasSearched(true);
+            setActiveProgressIndex(PROGRESS_MESSAGES.length - 1);
+            setIsLoading(false);
+          } else if (job.status === 'error') {
+            setError(job.message || "An error occurred during clip generation.");
+            setClips([]);
+            setHasSearched(false);
+            setIsLoading(false);
+          } else {
+            // processing -> keep polling
+            setTimeout(pollStatus, 5000);
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
+          // Keep polling even if we hit a temporary network error, unless time is up
+          setTimeout(pollStatus, 5000);
+        }
+      };
+
+      setTimeout(pollStatus, 5000);
     } catch (caughtError) {
       console.error("Clip generation error:", caughtError);
       
-      let message = "Something unexpected happened while generating clips.";
+      let message = "Something unexpected happened while starting clip generation.";
       if (axios.isAxiosError(caughtError)) {
         console.log("RAW BACKEND ERROR RESPONSE:", caughtError.response?.data);
         message = readGenerateError(caughtError.response?.data) ??
@@ -147,7 +186,6 @@ export default function GeneratePage() {
       setError(message);
       setClips([]);
       setHasSearched(false);
-    } finally {
       setIsLoading(false);
     }
   }
@@ -264,7 +302,7 @@ export default function GeneratePage() {
 
           {isLoading ? (
             <div className="mt-7 rounded-2xl border border-[var(--border)] bg-[rgba(8,8,8,0.68)] p-5 sm:p-6">
-              <p className="text-sm font-semibold text-[var(--text-1)]">Processing video</p>
+              <p className="text-sm font-semibold text-[var(--text-1)]">Processing your clips... this may take a few minutes</p>
               <div className="mt-4 space-y-3">
                 {PROGRESS_MESSAGES.map((message, index) => {
                   const isDone = index < activeProgressIndex;
