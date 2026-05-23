@@ -147,6 +147,7 @@ export default function GeneratePage() {
         try {
           const statusRes = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
           const job = statusRes.data;
+          console.log("Poll response:", job);
 
           if (job.status === 'done') {
             setClips(job.clips || []);
