@@ -50,7 +50,7 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
         videoPath,
         prompt: trimmedPrompt
       }, {
-        timeout: 300000 // 5 minutes timeout
+        timeout: 900000 // 15 minutes timeout
       });
 
       const payload = response.data;

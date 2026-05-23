@@ -3,9 +3,9 @@ import type { Clip, GenerateResponse } from "@/types/clips";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 900; // 15 mins
 
-const REQUEST_TIMEOUT_MS = 300_000;
+const REQUEST_TIMEOUT_MS = 900_000;
 const RETRY_DELAY_MS = 1_250;
 const DEFAULT_MAX_ATTEMPTS = 3;
 const VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
@@ -462,7 +462,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         attemptErrors.push(
-          "Clip generation timed out after 5 minutes. Please try a shorter video or try again."
+          "Clip generation timed out after 15 minutes. Please try a shorter video or try again."
         );
         lastStatusCode = 504;
       } else {

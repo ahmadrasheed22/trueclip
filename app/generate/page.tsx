@@ -121,7 +121,7 @@ export default function GeneratePage() {
         fontSize,
         position
       }, {
-        timeout: 300000 // 5 minutes
+        timeout: 900000 // 15 minutes
       });
 
       const payload = response.data;
