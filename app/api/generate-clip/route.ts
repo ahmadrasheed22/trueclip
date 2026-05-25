@@ -6,7 +6,7 @@ import { OpenAI } from "openai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 900;
+export const maxDuration = 60;
 
 type GenerateClipRequest = {
   videoPath?: unknown;

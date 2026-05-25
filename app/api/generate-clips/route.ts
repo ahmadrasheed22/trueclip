@@ -3,7 +3,7 @@ import type { Clip, GenerateResponse } from "@/types/clips";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const maxDuration = 900; // 15 mins
+export const maxDuration = 60; // Max allowed for Vercel Hobby plan
 
 const REQUEST_TIMEOUT_MS = 900_000;
 const RETRY_DELAY_MS = 1_250;
