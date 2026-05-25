@@ -114,63 +114,45 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const response = await axios.post<{ jobId: string }>("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", {
+      const payload = {
         youtubeUrl: trimmedUrl,
         subtitleStyle,
         highlightColor,
         fontSize,
         position
-      }, {
-        timeout: 30000 // 30 seconds for initial request
-      });
+      };
 
-      const { jobId } = response.data;
+      const { data } = await axios.post("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", payload);
+      const jobId = data.jobId;
+
       if (!jobId) {
         throw new Error("Did not receive job ID from server.");
       }
 
       console.log("Got jobId:", jobId);
-      
-      // Polling
-      const pollStartTime = Date.now();
-      const MAX_POLL_TIME = 10 * 60 * 1000; // 10 minutes
 
-      const pollStatus = async () => {
-        if (Date.now() - pollStartTime > MAX_POLL_TIME) {
-          setError("Clip generation timed out after 10 minutes.");
-          setClips([]);
-          setHasSearched(false);
-          setIsLoading(false);
-          return;
-        }
-
+      const interval = setInterval(async () => {
         try {
-          const statusRes = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}?t=${Date.now()}`);
-          const job = statusRes.data;
-          console.log("Poll response:", job);
-
-          if (job.status === 'done') {
-            setClips(job.clips || []);
+          const res = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
+          
+          if (res.data.status === 'done') {
+            clearInterval(interval);
+            setClips(res.data.clips || []);
             setHasSearched(true);
             setActiveProgressIndex(PROGRESS_MESSAGES.length - 1);
             setIsLoading(false);
-          } else if (job.status === 'error') {
-            setError(job.message || "An error occurred during clip generation.");
+          } else if (res.data.status === 'error') {
+            clearInterval(interval);
+            setError(res.data.message || "An error occurred during clip generation.");
             setClips([]);
             setHasSearched(false);
             setIsLoading(false);
-          } else {
-            // processing -> keep polling
-            setTimeout(pollStatus, 5000);
           }
         } catch (err) {
           console.error("Polling error:", err);
-          // Keep polling even if we hit a temporary network error, unless time is up
-          setTimeout(pollStatus, 5000);
         }
-      };
+      }, 5000);
 
-      setTimeout(pollStatus, 5000);
     } catch (caughtError) {
       console.error("Clip generation error:", caughtError);
       

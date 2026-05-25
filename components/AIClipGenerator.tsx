@@ -46,21 +46,43 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
     setClipUrl("");
 
     try {
-      const response = await axios.post<GenerateClipResponse>("/api/generate-clip", {
-        videoPath,
+      const payload = {
+        youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
         prompt: trimmedPrompt
-      }, {
-        timeout: 900000 // 15 minutes timeout
-      });
+      };
 
-      const payload = response.data;
-      console.log("RAW BACKEND RESPONSE (clip):", payload);
+      const { data } = await axios.post("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", payload);
+      const jobId = data.jobId;
 
-      if (!payload?.clipUrl) {
-        throw new Error("Clip generation finished, but no clip URL was returned.");
+      if (!jobId) {
+        throw new Error("Did not receive job ID from server.");
       }
 
-      setClipUrl(payload.clipUrl);
+      const interval = setInterval(async () => {
+        try {
+          const res = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
+          
+          if (res.data.status === 'done') {
+            clearInterval(interval);
+            const clps = res.data.clips || [];
+            if (clps.length > 0) {
+              setClipUrl(clps[0].videoUrl || clps[0].clipUrl || "");
+            } else if (res.data.clipUrl) {
+              setClipUrl(res.data.clipUrl);
+            } else {
+              setError("No clip generated.");
+            }
+            setIsLoading(false);
+          } else if (res.data.status === 'error') {
+            clearInterval(interval);
+            setError(res.data.message || "An error occurred during clip generation.");
+            setIsLoading(false);
+          }
+        } catch (err) {
+          console.error("Polling error:", err);
+        }
+      }, 5000);
+
     } catch (errorCause) {
       console.error("Clip generation error:", errorCause);
       let message = "Failed to generate clip. Please try again.";
@@ -75,7 +97,6 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
       }
       
       setError(message);
-    } finally {
       setIsLoading(false);
     }
   };
