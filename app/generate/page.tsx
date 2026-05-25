@@ -114,27 +114,30 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const payload = {
+      const { data } = await axios.post("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", {
         youtubeUrl: trimmedUrl,
         subtitleStyle,
         highlightColor,
         fontSize,
         position
-      };
+      });
 
-      const { data } = await axios.post("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", payload);
       const jobId = data.jobId;
+      if (!jobId) throw new Error("No job ID received.");
 
-      if (!jobId) {
-        throw new Error("Did not receive job ID from server.");
-      }
-
-      console.log("Got jobId:", jobId);
+      const pollStartTime = Date.now();
+      const MAX_POLL_TIME = 10 * 60 * 1000;
 
       const interval = setInterval(async () => {
+        if (Date.now() - pollStartTime > MAX_POLL_TIME) {
+          clearInterval(interval);
+          setError("Timed out after 10 minutes.");
+          setIsLoading(false);
+          return;
+        }
+
         try {
           const res = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
-          
           if (res.data.status === 'done') {
             clearInterval(interval);
             setClips(res.data.clips || []);
@@ -143,7 +146,7 @@ export default function GeneratePage() {
             setIsLoading(false);
           } else if (res.data.status === 'error') {
             clearInterval(interval);
-            setError(res.data.message || "An error occurred during clip generation.");
+            setError(res.data.message || "Error generating clips.");
             setClips([]);
             setHasSearched(false);
             setIsLoading(false);
@@ -152,7 +155,6 @@ export default function GeneratePage() {
           console.error("Polling error:", err);
         }
       }, 5000);
-
     } catch (caughtError) {
       console.error("Clip generation error:", caughtError);
       
