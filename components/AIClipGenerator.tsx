@@ -8,11 +8,6 @@ type AIClipGeneratorProps = {
   videoId: string;
 };
 
-type GenerateClipResponse = {
-  clipUrl?: string;
-  error?: string;
-};
-
 function getErrorMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
     return null;

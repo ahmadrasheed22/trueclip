@@ -3,7 +3,6 @@ import Image from "next/image";
 import LegalPageLayout, {
   LegalNumberedSection,
   legalLinkClassName,
-  LegalParagraph,
 } from "@/components/LegalPageLayout";
 
 export const metadata: Metadata = {

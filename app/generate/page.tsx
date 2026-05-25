@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import axios from "axios";
-import type { Clip, GenerateResponse } from "@/types/clips";
+import type { Clip } from "@/types/clips";
 
 const PROGRESS_MESSAGES = [
   "Downloading video...",

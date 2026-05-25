@@ -3,7 +3,6 @@ import Image from "next/image";
 import LegalPageLayout, {
   LegalNumberedSection,
   legalLinkClassName,
-  LegalParagraph,
 } from "@/components/LegalPageLayout";
 
 export const metadata: Metadata = {
@@ -58,7 +57,7 @@ export default function PrivacyPage() {
       </LegalNumberedSection>
 
       <LegalNumberedSection index={6}>
-        <strong>Children's Privacy:</strong> Trueclip is not intended for use by children under the age of 13. 
+        <strong>Children&apos;s Privacy:</strong> Trueclip is not intended for use by children under the age of 13. 
         We do not knowingly collect personal information from children under 13. If you are under 13, 
         you are not allowed to use our services. If we discover that we have collected information from a child 
         under 13, we will delete it immediately.
@@ -67,7 +66,7 @@ export default function PrivacyPage() {
       <LegalNumberedSection index={7}>
         <strong>Changes to this Policy:</strong> We may update this Privacy Policy from time to time. 
         We will notify you of any changes by posting the new Privacy Policy on this page and updating the 
-        "Last updated" date.
+        &quot;Last updated&quot; date.
       </LegalNumberedSection>
     </LegalPageLayout>
   );
