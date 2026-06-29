@@ -163,14 +163,27 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     const downloadUrl = resolveDownloadUrl(video);
 
     try {
+        const response = await fetch(downloadUrl, { cache: "no-store" });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.error || "Download failed. Please try again.");
+        }
+
+        const blob = await response.blob();
       const fallbackName = sanitizeFilename(video.title || video.videoId || "short");
+        const filenameFromHeader = response.headers.get("content-disposition")?.match(/filename="?([^";]+)"?/i)?.[1];
+        const filename = filenameFromHeader || `${fallbackName}.mp4`;
+
+        const objectUrl = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
-      anchor.href = downloadUrl;
-      anchor.download = `${fallbackName}.mp4`;
+        anchor.href = objectUrl;
+        anchor.download = filename;
       anchor.rel = "noopener noreferrer";
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
+        window.URL.revokeObjectURL(objectUrl);
 
       setDownloadState("success");
       setDownloadMessage("Download started.");
