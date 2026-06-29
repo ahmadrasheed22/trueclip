@@ -79,10 +79,6 @@ function readFilenameFromDisposition(header: string | null) {
 }
 
 function resolveDownloadUrl(video: VideoItem) {
-  if (video.mp4_url) {
-    return video.mp4_url;
-  }
-
   const fallback = new URLSearchParams({
     videoId: video.videoId,
     title: video.title || video.videoId,
