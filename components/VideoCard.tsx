@@ -62,23 +62,25 @@ function sanitizeFilename(value: string) {
   return value.replace(/[\\/:*?"<>|]+/g, "").trim();
 }
 
-function readFilenameFromDisposition(header: string | null) {
-  if (!header) return null;
+function getBackendDownloadUrl(video: VideoItem) {
+  const backendUrl = process.env.NEXT_PUBLIC_CLIP_BACKEND_URL?.trim();
 
-  const utfMatch = header.match(/filename\*=UTF-8''([^;]+)/i);
-  if (utfMatch && utfMatch[1]) {
-    try {
-      return decodeURIComponent(utfMatch[1]);
-    } catch {
-      return utfMatch[1];
-    }
+  if (!backendUrl) {
+    return null;
   }
 
-  const asciiMatch = header.match(/filename="?([^";]+)"?/i);
-  return asciiMatch?.[1] ?? null;
+  const targetUrl = new URL(`/download/youtube/${encodeURIComponent(video.videoId)}`, backendUrl);
+  targetUrl.searchParams.set("title", video.title || video.videoId);
+
+  return targetUrl.toString();
 }
 
 function resolveDownloadUrl(video: VideoItem) {
+  const backendDownloadUrl = getBackendDownloadUrl(video);
+  if (backendDownloadUrl) {
+    return backendDownloadUrl;
+  }
+
   const fallback = new URLSearchParams({
     videoId: video.videoId,
     title: video.title || video.videoId,
@@ -161,27 +163,14 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     const downloadUrl = resolveDownloadUrl(video);
 
     try {
-      const response = await fetch(downloadUrl, { cache: "no-store" });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        const message = payload?.error || "Download failed. Please try again.";
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
       const fallbackName = sanitizeFilename(video.title || video.videoId || "short");
-      const filename =
-        readFilenameFromDisposition(response.headers.get("content-disposition")) ||
-        `${fallbackName}.mp4`;
-
-      const objectUrl = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = filename;
+      anchor.href = downloadUrl;
+      anchor.download = `${fallbackName}.mp4`;
+      anchor.rel = "noopener noreferrer";
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
-      window.URL.revokeObjectURL(objectUrl);
 
       setDownloadState("success");
       setDownloadMessage("Download started.");
@@ -210,8 +199,7 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     .filter(Boolean)
     .join(" ");
 
-  const fallbackRepostUrl = `/api/download?videoId=${encodeURIComponent(video.videoId)}&title=${encodeURIComponent(video.title)}`;
-  const repostVideoUrl = video.mp4_url || fallbackRepostUrl;
+  const repostVideoUrl = getBackendDownloadUrl(video) || video.mp4_url || `/api/download?videoId=${encodeURIComponent(video.videoId)}&title=${encodeURIComponent(video.title)}`;
 
   return (
     <article className="video-card">

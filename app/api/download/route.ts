@@ -22,37 +22,7 @@ export async function GET(request: Request) {
     const targetUrl = new URL(`/download/youtube/${videoId}`, backendUrl);
     targetUrl.searchParams.set("title", title);
 
-    const response = await fetch(targetUrl.toString(), {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      let errorMessage = `Backend responded with status: ${response.status}`;
-      try {
-        const errorJson = await response.json();
-        if (errorJson.error) {
-          errorMessage = errorJson.error;
-        }
-      } catch {
-        // Fallback if not JSON
-      }
-      return NextResponse.json({ error: errorMessage }, { status: response.status });
-    }
-
-    const headers = new Headers();
-    headers.set("Content-Type", response.headers.get("Content-Type") || "video/mp4");
-    
-    const disposition = response.headers.get("Content-Disposition");
-    if (disposition) {
-      headers.set("Content-Disposition", disposition);
-    } else {
-      headers.set("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.mp4"`);
-    }
-
-    return new NextResponse(response.body, {
-      status: 200,
-      headers,
-    });
+    return NextResponse.redirect(targetUrl, { status: 307 });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
