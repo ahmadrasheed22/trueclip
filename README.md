@@ -36,6 +36,7 @@ Clip generation values:
 
 Optional yt-dlp authentication values (recommended when YouTube returns bot-check errors):
 
+- `YTDLP_COOKIES_B64` (base64-encoded `cookies.txt` content)
 - `YTDLP_COOKIES_FROM_BROWSER` (example: `chrome`, `edge`, or `firefox`)
 - `YTDLP_COOKIES_FILE` (absolute path to a `cookies.txt` export)
 
@@ -53,6 +54,7 @@ Notes:
 - After adding `video.publish`, users must reconnect their TikTok account to refresh the session scope.
 - Legacy callback path `/api/auth/tiktok/callback` is still supported and forwards to `/api/tiktok/callback`.
 - Set only one of `YTDLP_COOKIES_FROM_BROWSER` or `YTDLP_COOKIES_FILE`.
+- If multiple yt-dlp extractor settings are available, the backend will try broader YouTube client and format fallbacks before failing the request.
 - Ensure your clip backend can run yt-dlp JavaScript extraction (for example with `--js-runtimes node`) or some videos will fail.
 
 ## Local Development
