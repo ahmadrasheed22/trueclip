@@ -46,37 +46,16 @@ export default function AIClipGenerator({ videoPath, videoId }: AIClipGeneratorP
         prompt: trimmedPrompt
       };
 
-      const { data } = await axios.post("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", payload);
-      const jobId = data.jobId;
+      const { data } = await axios.post("/api/generate-clips", payload);
+      const clps = Array.isArray(data?.clips) ? data.clips : [];
 
-      if (!jobId) {
-        throw new Error("Did not receive job ID from server.");
+      if (clps.length > 0) {
+        setClipUrl(clps[0].videoUrl || clps[0].clipUrl || "");
+      } else {
+        setError(data?.error || "No clip generated.");
       }
 
-      const interval = setInterval(async () => {
-        try {
-          const res = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
-          
-          if (res.data.status === 'done') {
-            clearInterval(interval);
-            const clps = res.data.clips || [];
-            if (clps.length > 0) {
-              setClipUrl(clps[0].videoUrl || clps[0].clipUrl || "");
-            } else if (res.data.clipUrl) {
-              setClipUrl(res.data.clipUrl);
-            } else {
-              setError("No clip generated.");
-            }
-            setIsLoading(false);
-          } else if (res.data.status === 'error') {
-            clearInterval(interval);
-            setError(res.data.message || "An error occurred during clip generation.");
-            setIsLoading(false);
-          }
-        } catch (err) {
-          console.error("Polling error:", err);
-        }
-      }, 5000);
+      setIsLoading(false);
 
     } catch (errorCause) {
       console.error("Clip generation error:", errorCause);

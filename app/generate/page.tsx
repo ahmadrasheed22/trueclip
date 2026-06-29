@@ -114,7 +114,7 @@ export default function GeneratePage() {
     setActiveProgressIndex(0);
 
     try {
-      const { data } = await axios.post("https://trueclip-backend-production-e81c.up.railway.app/generate-clips", {
+      const { data } = await axios.post("/api/generate-clips", {
         youtubeUrl: trimmedUrl,
         subtitleStyle,
         highlightColor,
@@ -122,39 +122,11 @@ export default function GeneratePage() {
         position
       });
 
-      const jobId = data.jobId;
-      if (!jobId) throw new Error("No job ID received.");
-
-      const pollStartTime = Date.now();
-      const MAX_POLL_TIME = 10 * 60 * 1000;
-
-      const interval = setInterval(async () => {
-        if (Date.now() - pollStartTime > MAX_POLL_TIME) {
-          clearInterval(interval);
-          setError("Timed out after 10 minutes.");
-          setIsLoading(false);
-          return;
-        }
-
-        try {
-          const res = await axios.get(`https://trueclip-backend-production-e81c.up.railway.app/job-status/${jobId}`);
-          if (res.data.status === 'done') {
-            clearInterval(interval);
-            setClips(res.data.clips || []);
-            setHasSearched(true);
-            setActiveProgressIndex(PROGRESS_MESSAGES.length - 1);
-            setIsLoading(false);
-          } else if (res.data.status === 'error') {
-            clearInterval(interval);
-            setError(res.data.message || "Error generating clips.");
-            setClips([]);
-            setHasSearched(false);
-            setIsLoading(false);
-          }
-        } catch (err) {
-          console.error("Polling error:", err);
-        }
-      }, 5000);
+      const clipsFromApi = Array.isArray(data?.clips) ? data.clips : [];
+      setClips(clipsFromApi);
+      setHasSearched(true);
+      setActiveProgressIndex(PROGRESS_MESSAGES.length - 1);
+      setIsLoading(false);
     } catch (caughtError) {
       console.error("Clip generation error:", caughtError);
       
