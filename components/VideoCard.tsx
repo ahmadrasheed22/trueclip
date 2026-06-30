@@ -62,25 +62,7 @@ function sanitizeFilename(value: string) {
   return value.replace(/[\\/:*?"<>|]+/g, "").trim();
 }
 
-function getBackendDownloadUrl(video: VideoItem) {
-  const backendUrl = process.env.NEXT_PUBLIC_CLIP_BACKEND_URL?.trim();
-
-  if (!backendUrl) {
-    return null;
-  }
-
-  const targetUrl = new URL(`/download/youtube/${encodeURIComponent(video.videoId)}`, backendUrl);
-  targetUrl.searchParams.set("title", video.title || video.videoId);
-
-  return targetUrl.toString();
-}
-
 function resolveDownloadUrl(video: VideoItem) {
-  const backendDownloadUrl = getBackendDownloadUrl(video);
-  if (backendDownloadUrl) {
-    return backendDownloadUrl;
-  }
-
   const fallback = new URLSearchParams({
     videoId: video.videoId,
     title: video.title || video.videoId,
@@ -212,7 +194,7 @@ export default function VideoCard({ video, onPlay }: VideoCardProps) {
     .filter(Boolean)
     .join(" ");
 
-  const repostVideoUrl = getBackendDownloadUrl(video) || video.mp4_url || `/api/download?videoId=${encodeURIComponent(video.videoId)}&title=${encodeURIComponent(video.title)}`;
+  const repostVideoUrl = video.mp4_url || resolveDownloadUrl(video);
 
   return (
     <article className="video-card">
